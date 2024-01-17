@@ -3,12 +3,13 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
-from models.Initial_fc_nn import FullyConnectedNN
-from Losses import compute_parameter_loss
-
+# Add parent directory to path
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
+
+from models.Initial_fc_nn import FullyConnectedNN
+from Losses import compute_parameter_loss
 from data.Polynomial_test import load_polynomial_data
 
 
@@ -26,7 +27,7 @@ true_params_tensor = torch.tensor(true_params, dtype=torch.float32)
 dataset = TensorDataset(inputs_tensor, true_params_tensor)
 
 # Create DataLoader
-batch_size = 128  # Set batch size
+batch_size = 20  # Set batch size
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize the models for each parameter
@@ -37,7 +38,7 @@ optimizers = [optim.Adam(model.parameters(), lr=0.0001) for model in models]
 
 
 # Training loop
-num_epochs = 20  # Set the number of epochs
+num_epochs = 10  # Set the number of epochs
 for epoch in range(num_epochs):
     for batch_inputs, batch_true_params in dataloader:
         for i, model in enumerate(models):
@@ -48,7 +49,7 @@ for epoch in range(num_epochs):
             output_param = model(batch_inputs).squeeze()
 
             # Compute loss for the specific parameter
-            loss = compute_parameter_loss(output_param, batch_true_params[:, i])
+            loss = compute_parameter_loss(output_param, batch_true_params[:, i], use_absolute=True)
 
             # Backward pass and optimization
             loss.backward()

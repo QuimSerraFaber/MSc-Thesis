@@ -18,12 +18,15 @@ def MSE(y, y_hat):
     return np.mean(np.square(np.subtract(y, y_hat)))
 
 
-def compute_parameter_loss(predicted_param, true_param):
+def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
     # Loss is the difference between the predicted and true parameter
     # Input must be torch tensors
-    return (predicted_param - true_param).mean()
-
-
+    if use_absolute:
+        # Compute the absolute difference
+        return (predicted_param - true_param).abs().mean()
+    else:
+        # Compute the regular mean difference
+        return (predicted_param - true_param).mean()
 
 
 
