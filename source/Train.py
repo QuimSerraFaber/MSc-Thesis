@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
 from models.Initial_fc_nn import FullyConnectedNN
-from Losses import compute_absolute_loss
+from Losses import compute_parameter_loss
 
 
 inputs = np.random.randn(1000, 10)  # Example input data
@@ -43,7 +43,7 @@ for epoch in range(num_epochs):
             output_param = model(batch_inputs).squeeze()
 
             # Compute loss for the specific parameter
-            loss = compute_absolute_loss(output_param, batch_true_params[:, i])
+            loss = compute_parameter_loss(output_param, batch_true_params[:, i])
 
             # Backward pass and optimization
             loss.backward()
