@@ -7,16 +7,11 @@ from models.Initial_fc_nn import FullyConnectedNN
 from Losses import compute_absolute_loss
 
 
-def load_data():
-    # Function to load your data
-    # This should return the input data and corresponding true parameters as separate arrays
-    return inputs, true_params  # true_params should be a 2D array where each column is a parameter
-
 inputs = np.random.randn(1000, 10)  # Example input data
 true_params = np.random.randn(1000, 4)  # Example target parameters
 
 # Load data
-inputs, true_params = load_data()
+#inputs, true_params = load_polynomial_data()
 
 # Convert data to PyTorch tensors
 inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -33,11 +28,11 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 models = [FullyConnectedNN(in_features=inputs.shape[1]) for _ in range(4)]
 
 # Optimizers (one for each model)
-optimizers = [optim.Adam(model.parameters(), lr=0.001) for model in models]
+optimizers = [optim.Adam(model.parameters(), lr=0.0001) for model in models]
 
 
 # Training loop
-num_epochs = 10  # Set the number of epochs
+num_epochs = 20  # Set the number of epochs
 for epoch in range(num_epochs):
     for batch_inputs, batch_true_params in dataloader:
         for i, model in enumerate(models):
@@ -57,4 +52,8 @@ for epoch in range(num_epochs):
             print(f"Parameter {i+1}, Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}")
 
 
+
+# Print the shapes of the parameters
+print("Input shape:", inputs.shape)
+print("True parameters shape:", true_params.shape)
 
