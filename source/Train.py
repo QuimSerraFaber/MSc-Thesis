@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 from models.Initial_fc_nn import FullyConnectedNN
 from Losses import MSE
-from Predicted_signal import predict_polynomial_signal
+from Predicted_signal import predict_polynomial
 
 # Initialize the models
 models = [FullyConnectedNN(in_features) for _ in range(4)]

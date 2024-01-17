@@ -16,13 +16,7 @@ def MSE(y, y_hat):
     """
     return np.mean(np.square(np.subtract(y, y_hat)))
 
-def MSE_grad(y, y_hat):
-    #calculate the gradient of the mean squared error
-    #y is the target signal
-    #y_hat is the predicted signal
-    #input is are two lists of equal length containing the signals
-    #output is the gradient of the mean squared error
-    return np.subtract(y_hat, y)
+
 
 
 
