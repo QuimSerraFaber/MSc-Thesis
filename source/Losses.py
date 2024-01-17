@@ -4,6 +4,7 @@
 #input is are two lists of equal length containing the signals
 
 import numpy as np
+import torch
 
 def MSE(y, y_hat):
     """
@@ -15,6 +16,12 @@ def MSE(y, y_hat):
     :return: The mean squared error as a float.
     """
     return np.mean(np.square(np.subtract(y, y_hat)))
+
+
+def compute_absolute_loss(predicted_param, true_param):
+    # Loss is the absolute difference between the predicted and true parameter
+    # Input must be torch tensors
+    return torch.abs(predicted_param - true_param).mean()
 
 
 
