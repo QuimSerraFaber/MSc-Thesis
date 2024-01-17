@@ -6,12 +6,17 @@ import numpy as np
 from models.Initial_fc_nn import FullyConnectedNN
 from Losses import compute_parameter_loss
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+from data.Polynomial_test import load_polynomial_data
 
-inputs = np.random.randn(1000, 10)  # Example input data
-true_params = np.random.randn(1000, 4)  # Example target parameters
+
+#inputs = np.random.randn(1000, 10)  # Example input data
+#true_params = np.random.randn(1000, 4)  # Example target parameters
 
 # Load data
-#inputs, true_params = load_polynomial_data()
+inputs, true_params = load_polynomial_data()
 
 # Convert data to PyTorch tensors
 inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
