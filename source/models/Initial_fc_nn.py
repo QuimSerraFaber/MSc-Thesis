@@ -8,9 +8,9 @@ class FullyConnectedNN(nn.Module):
         super(FullyConnectedNN, self).__init__()
         self.fc1 = nn.Linear(in_features, 64)  # Adjust in_features to match your data
         self.bn1 = nn.BatchNorm1d(64)
-        self.fc2 = nn.Linear(64, 128)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.fc3 = nn.Linear(32, 1)  # Output layer
+        self.fc2 = nn.Linear(64, 64)
+        self.bn2 = nn.BatchNorm1d(64)
+        self.fc3 = nn.Linear(64, 1)  # Output layer
 
     def forward(self, x):
         x = torch.relu(self.bn1(self.fc1(x)))
