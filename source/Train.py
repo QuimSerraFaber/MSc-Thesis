@@ -17,7 +17,7 @@ from data.Polynomial_test import load_polynomial_data
 #true_params = np.random.randn(1000, 4)  # Example target parameters
 
 # Load data
-inputs, true_params = load_polynomial_data()
+inputs, true_params = load_polynomial_data(num_samples=10000, x_range=(-50, 50), num_points=200, noise_level=0.1, degree=3)
 
 # Convert data to PyTorch tensors
 inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -27,7 +27,7 @@ true_params_tensor = torch.tensor(true_params, dtype=torch.float32)
 dataset = TensorDataset(inputs_tensor, true_params_tensor)
 
 # Create DataLoader
-batch_size = 20  # Set batch size
+batch_size = 128  # Set batch size
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize the models for each parameter
