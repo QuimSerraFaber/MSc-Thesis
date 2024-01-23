@@ -1,0 +1,21 @@
+# Bytecode compiled files
+__pycache__/
+
+# Specific data files
+all_data_003.csv
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# IDE settings (VSCode)
+.vscode/
+
+# Operating system files
+.DS_Store 
+
