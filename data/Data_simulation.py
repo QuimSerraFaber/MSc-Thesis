@@ -104,7 +104,7 @@ if __name__ == "__main__":
                                                             num_equidistant_points)
 
 
-def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip_pl):
+def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip_pl, Type):
     """
     Plots the original plasma concentration values and the interpolated values.
 
@@ -115,6 +115,7 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip
     linear_pl (list): Plasma concentration values interpolated linearly.
     cubic_pl (list): Plasma concentration values interpolated using cubic spline.
     pchip_pl (list): Plasma concentration values interpolated using PCHIP.
+    Type (str): The type of data being plotted.
     """
     plt.figure(figsize=(10, 6))
 
@@ -131,8 +132,8 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip
     plt.plot(new_rtim, pchip_pl, label='PCHIP Interpolation', color='orange')
 
     plt.xlabel('Time')
-    plt.ylabel('Plasma Concentration')
-    plt.title('Plasma Concentration vs Time')
+    plt.ylabel(Type + ' Concentration')
+    plt.title(Type + ' Concentration vs Time')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     # Example usage
     plot_interpolations(data_from_first_row['rtim_list'], 
                         data_from_first_row['pl_list'], 
-                        new_rtim, linear_pl, cubic_pl, pchip_pl)
+                        new_rtim, linear_pl, cubic_pl, pchip_pl, 'Plasma')
 
 
 def IRF(gt_parameters_list, equidistant_rtim):
