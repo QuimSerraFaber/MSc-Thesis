@@ -4,6 +4,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import torch
+import torch.nn.functional as F
 
 # Load the file into a pandas DataFrame
 df = pd.read_csv('data/all_data_003.csv')
@@ -173,7 +175,94 @@ def IRF(gt_parameters_list, equidistant_rtim):
 
 # Example usage
 IRF_values = IRF(data_from_first_row['gt_parameters_list'], new_rtim)
-print(IRF_values)
+# print(IRF_values)
 
 
+def simulated_tac(IRF_values, pchip_pl):
+    """
+    Calculates the simulated TAC values for the given IRF and plasma concentration values.
+
+    Parameters:
+    IRF_values (list): The IRF values.
+    pchip_pl (list): Plasma concentration values interpolated using PCHIP.
+
+    Returns:
+    list: The simulated TAC values.
+    """
+    # Convert lists to PyTorch tensors and add required dimensions for conv1d
+    IRF_tensor = torch.tensor(IRF_values).float().unsqueeze(0).unsqueeze(0)
+    pchip_pl_tensor = torch.tensor(pchip_pl).float().unsqueeze(0).unsqueeze(0)
+
+    # Perform the convolution using PyTorch's conv1d function
+    # The groups argument ensures that each input channel is convolved with its own filter (IRF_tensor)
+    result_tensor = F.conv1d(pchip_pl_tensor, IRF_tensor, padding='same', groups=1)
+
+    # Remove the extra dimensions and convert the tensor back to a list
+    simulated_tac_values = result_tensor.squeeze().tolist()
+
+    return simulated_tac_values
+
+def simulated_tac2(IRF_values, pchip_pl):
+    """
+    Calculates the simulated TAC values for the given IRF and plasma concentration values.
+
+    Parameters:
+    IRF_values (list): The IRF values.
+    pchip_pl (list): Plasma concentration values interpolated using PCHIP.
+
+    Returns:
+    list: The simulated TAC values.
+    """
+    # Convert lists to PyTorch tensors and add batch and channel dimensions (required for conv1d)
+    # The unsqueeze(0) adds a batch dimension and unsqueeze(1) adds a channel dimension.
+    irf_tensor = torch.tensor(IRF_values).float().unsqueeze(0).unsqueeze(0)
+    pchip_tensor = torch.tensor(pchip_pl).float().unsqueeze(0).unsqueeze(0)
+
+    # Perform the convolution
+    # The conv1d function expects inputs of size (minibatch, in_channels, iW), where
+    # minibatch is the number of input maps, in_channels is the number of channels in the input image,
+    # and iW is the width of the input image.
+    result_tensor = F.conv1d(pchip_tensor, irf_tensor, padding='same')
+
+    # Convert the result back to a list and remove the extra dimensions
+    simulated_tac_values = result_tensor.squeeze().tolist()
+
+    return simulated_tac_values
+
+def simulated_tac3(IRF_values, pchip_pl):
+    # Convert lists to PyTorch tensors
+    irf_tensor = torch.tensor(IRF_values).float().view(1, 1, -1)
+    pchip_tensor = torch.tensor(pchip_pl).float().view(1, 1, -1)
+
+    # Check if the IRF tensor length is odd, if not, append a zero
+    if irf_tensor.shape[-1] % 2 == 0:
+        # Append a zero to make the length odd
+        irf_tensor = F.pad(irf_tensor, (0, 1))
     
+    # Perform the convolution
+    result_tensor = F.conv1d(pchip_tensor, irf_tensor, padding='same')
+
+    # Convert the result back to a list
+    simulated_tac_values = result_tensor.squeeze().tolist()
+
+    return simulated_tac_values
+
+
+# Example usage
+simulated_tac_values = simulated_tac3(IRF_values, pchip_pl)
+# print(simulated_tac_values)
+
+
+# Plot the simulated TAC values against the original TAC values
+plt.figure(figsize=(10, 6))
+plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='red')
+plt.plot(data_from_first_row['tac_list'], label='Original TAC', color='blue')
+plt.xlabel('Time')
+plt.ylabel('TAC')
+plt.title('Simulated TAC vs Original TAC')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+
