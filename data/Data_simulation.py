@@ -3,7 +3,7 @@
 
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 # Load the file into a pandas DataFrame
 df = pd.read_csv('data/all_data_003.csv')
@@ -59,6 +59,9 @@ data_from_first_row = DataLoader(0, df)
 print(data_from_first_row)
 
 
+from scipy.interpolate import interp1d
+from scipy.interpolate import PchipInterpolator
+
 def equidistant_interpolation(rtim_list, pl_list, num_points):
     """
     Performs equidistant interpolation on the given rtim_list and pl_list.
@@ -69,11 +72,11 @@ def equidistant_interpolation(rtim_list, pl_list, num_points):
     num_points (int): The number of desired equidistant points.
 
     Returns:
-    tuple: Two lists containing the new equidistant timepoints and interpolated plasma values.
+    tuple: Lists containing the new equidistant timepoints and interpolated plasma values.
     """
     # Generate equidistant timepoints
     min_time = min(rtim_list)
-    max_time = max(rtim_list)
+    max_time = max(rtim_list) + 5  # Add 5 to max_time to ensure the last timepoint is included
     equidistant_rtim = np.linspace(min_time, max_time, num_points)
 
     # Perform linear interpolation using numpy
@@ -83,19 +86,20 @@ def equidistant_interpolation(rtim_list, pl_list, num_points):
     cubic_interp_func = interp1d(rtim_list, pl_list, kind='cubic', fill_value="extrapolate")
     cubic_interp_pl = cubic_interp_func(equidistant_rtim)
 
-    return equidistant_rtim, linear_interp_pl, cubic_interp_pl
+    # Perform monotonic cubic interpolation using PchipInterpolator
+    pchip_interp_func = PchipInterpolator(rtim_list, pl_list)
+    pchip_interp_pl = pchip_interp_func(equidistant_rtim)
+
+    return equidistant_rtim, linear_interp_pl, cubic_interp_pl, pchip_interp_pl
 
 # Example usage:
-num_equidistant_points = 1500
-new_rtim, linear_pl, cubic_pl = equidistant_interpolation(data_from_first_row['rtim_list'],
+num_equidistant_points = 10000
+new_rtim, linear_pl, cubic_pl, pchip_pl = equidistant_interpolation(data_from_first_row['rtim_list'],
                                                           data_from_first_row['pl_list'],
                                                           num_equidistant_points)
 
 
-
-import matplotlib.pyplot as plt
-
-def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl):
+def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip_pl):
     """
     Plots the original plasma concentration values and the interpolated values.
 
@@ -117,6 +121,9 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl):
     # Plot cubic interpolation
     plt.plot(new_rtim, cubic_pl, label='Cubic Interpolation', color='green')
 
+    # Plot pchip interpolation
+    plt.plot(new_rtim, pchip_pl, label='PCHIP Interpolation', color='orange')
+
     plt.xlabel('Time')
     plt.ylabel('Plasma Concentration')
     plt.title('Plasma Concentration vs Time')
@@ -127,4 +134,4 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl):
 # Example usage
 plot_interpolations(data_from_first_row['rtim_list'], 
                     data_from_first_row['pl_list'], 
-                    new_rtim, linear_pl, cubic_pl)
+                    new_rtim, linear_pl, cubic_pl, pchip_pl)
