@@ -109,6 +109,7 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip
     new_rtim (list): Equidistant timepoints.
     linear_pl (list): Plasma concentration values interpolated linearly.
     cubic_pl (list): Plasma concentration values interpolated using cubic spline.
+    pchip_pl (list): Plasma concentration values interpolated using PCHIP.
     """
     plt.figure(figsize=(10, 6))
 
@@ -135,3 +136,44 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip
 plot_interpolations(data_from_first_row['rtim_list'], 
                     data_from_first_row['pl_list'], 
                     new_rtim, linear_pl, cubic_pl, pchip_pl)
+
+
+def IRF(gt_parameters_list, equidistant_rtim):
+    """
+    Calculates the impulse response function (IRF) for the given ground truth parameters and equidistant timepoints.
+
+    Parameters:
+    gt_parameters_list (list): List of ground truth parameters.
+    equidistant_rtim (list): Equidistant timepoints.
+
+    Returns:
+    list: The IRF values.
+    """
+    # Extract ground truth parameters
+    k1 = gt_parameters_list[0]
+    k2 = gt_parameters_list[1]
+    k3 = gt_parameters_list[2]
+    k4 = 0 # For the current data, k4 is always 0
+
+    # Calculate alphas:
+    alpha1 = (k2 + k3 + k4) - np.sqrt((k2 + k3 + k4)**2 - 4*k2*k4)
+    alpha1 /= 2
+
+    alpha2 = (k2 + k3 + k4) + np.sqrt((k2 + k3 + k4)**2 - 4*k2*k4)
+    alpha2 /= 2
+
+    # Calculate IRF
+    IRF = []
+    for t in equidistant_rtim:
+        value = ( (k3 + k4 - alpha1) * np.exp(-alpha1 * t) + (alpha2 - k3 - k4) * np.exp(-alpha2 * t) ) / (alpha2 - alpha1)
+        value *= k1
+        IRF.append(value)
+    
+    return IRF
+
+# Example usage
+IRF_values = IRF(data_from_first_row['gt_parameters_list'], new_rtim)
+print(IRF_values)
+
+
+    
