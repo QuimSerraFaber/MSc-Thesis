@@ -98,7 +98,7 @@ def equidistant_interpolation(rtim_list, pl_list, num_points):
 
 if __name__ == "__main__":
     # Example usage:
-    num_equidistant_points = 10000
+    num_equidistant_points = 1024
     new_rtim, linear_pl, cubic_pl, pchip_pl = equidistant_interpolation(data_from_first_row['rtim_list'],
                                                             data_from_first_row['pl_list'],
                                                             num_equidistant_points)
