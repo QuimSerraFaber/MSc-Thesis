@@ -3,6 +3,7 @@ __pycache__/
 
 # Specific data files
 all_data_003.csv
+P1_data.csv
 
 # Compiled Python files
 *.pyc
