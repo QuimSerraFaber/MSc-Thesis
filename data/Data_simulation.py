@@ -1,5 +1,5 @@
 # Loads the originally simulated data csv file
-# Uses simulated_tac to generate the new simulated data for the same parameters
+# Uses generates new simulated data for the same parameters
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     df = pd.read_csv('data/all_data_003.csv')
 
     # Show the first few rows of the DataFrame to confirm it's loaded correctly
-    print(df.head())
+    print("Dataframe head: \n", df.head())
 
 
 def DataLoader(row, df):
@@ -56,11 +56,11 @@ def DataLoader(row, df):
     }
 
 if __name__ == "__main__":
-    # Usage example:
+    # Load data from the first row of the dataset
     data_from_first_row = DataLoader(0, df)
 
     # Output the data extracted from the first row to verify the DataLoader function
-    print(data_from_first_row)
+    print("Loaded data: \n", data_from_first_row)
 
 
 from scipy.interpolate import interp1d
@@ -97,7 +97,7 @@ def equidistant_interpolation(rtim_list, pl_list, num_points):
     return equidistant_rtim, linear_interp_pl, cubic_interp_pl, pchip_interp_pl
 
 if __name__ == "__main__":
-    # Example usage:
+    # Interpolate plasma concentration values:
     num_equidistant_points = 1024
     new_rtim, linear_pl, cubic_pl, pchip_pl = equidistant_interpolation(data_from_first_row['rtim_list'],
                                                             data_from_first_row['pl_list'],
@@ -132,17 +132,17 @@ def plot_interpolations(rtim_list, pl_list, new_rtim, linear_pl, cubic_pl, pchip
     plt.plot(new_rtim, pchip_pl, label='PCHIP Interpolation', color='orange')
 
     plt.xlabel('Time')
-    plt.ylabel(Type + ' Concentration')
-    plt.title(Type + ' Concentration vs Time')
+    plt.ylabel(Type)
+    plt.title(Type + ' vs Time')
     plt.legend()
     plt.grid(True)
     plt.show()
 
 if __name__ == "__main__":
-    # Example usage
+    # Plot the interpolated plasma concentration values:
     plot_interpolations(data_from_first_row['rtim_list'], 
                         data_from_first_row['pl_list'], 
-                        new_rtim, linear_pl, cubic_pl, pchip_pl, 'Plasma')
+                        new_rtim, linear_pl, cubic_pl, pchip_pl, 'Plasma Concentration')
 
 
 def IRF(gt_parameters_list, equidistant_rtim):
@@ -179,8 +179,110 @@ def IRF(gt_parameters_list, equidistant_rtim):
     return IRF
 
 if __name__ == "__main__":
-    # Example usage
+    # Calculate the IRF values:
     IRF_values = IRF(data_from_first_row['gt_parameters_list'], new_rtim)
     # print(IRF_values)
 
+
+import scipy.signal
+
+def c_tissue(IRF_values, pchip_pl, dt):
+    """
+    Calculates the simulated C_Tissue values for the given IRF and plasma concentration values.
+
+    Parameters:
+    IRF_values (list): The IRF values.
+    pchip_pl (list): Plasma concentration values interpolated using PCHIP.
+    dt (float): The time step increment.
+
+    Returns:
+    list: The simulated C_Tissue values.
+    """
+    num_points = len(IRF_values) 
+
+    # Compute the convolution of the two lists
+    simulated_c_tissue_values = scipy.signal.convolve(IRF_values, pchip_pl, mode='full')[:num_points]
+
+    # Normalize the convolution result
+    normalized_c_tissue = simulated_c_tissue_values * dt # Multiply by dt
+
+    return normalized_c_tissue
+
+if __name__ == "__main__":
+    # Calculate the simulated C_Tissue values:
+    dt = new_rtim[1] - new_rtim[0]
+    simulated_c_tissue_values = c_tissue(IRF_values, pchip_pl, dt)
+
+    # Divide simulated tac values by constant
+    # WARNING: This is a temoporary fix to the scaling issue
+    simulated_c_tissue_values = [x / 1.24 for x in simulated_c_tissue_values]
+
+if __name__ == "__main__":
+    # Interpolate TAC values:
+    new_rtim, linear_tac, cubic_tac, pchip_tac = equidistant_interpolation(data_from_first_row['rtim_list'],
+                                                          data_from_first_row['tac_list'],
+                                                          num_equidistant_points)
+    # Plot the interpolated TAC values:
+    plot_interpolations(data_from_first_row['rtim_list'], 
+                        data_from_first_row['tac_list'], 
+                        new_rtim, linear_tac, cubic_tac, pchip_tac, 'TAC')
+
+if __name__ == "__main__":
+    # Interpolate blood concentration values:
+    new_rtim, linear_bl, cubic_bl, pchip_bl = equidistant_interpolation(data_from_first_row['rtim_list'],
+                                                          data_from_first_row['bl_list'],
+                                                          num_equidistant_points)
+
+    # Plot the interpolated blood concentration values:
+    plot_interpolations(data_from_first_row['rtim_list'], 
+                        data_from_first_row['bl_list'], 
+                        new_rtim, linear_bl, cubic_bl, pchip_bl, 'Blood Concentration')
+    
+    
+def simulated_tac(c_tissue, gt_parameters_list, bl_list):
+    """
+    Calculates the simulated TAC values for the given C_Tissue and blood concentration values.
+
+    Parameters:
+    c_tissue (list): The C_Tissue values.
+    gt_parameters_list (list): The ground truth parameters.
+    bl_list (list): Blood concentration values.
+
+    Returns:
+    list: The simulated TAC values.
+    """
+    simulated_tac_values = []
+    vb = gt_parameters_list[3]
+
+    for i in range(len(c_tissue)):
+        value = c_tissue[i] * (1-vb) + vb * bl_list[i]
+        simulated_tac_values.append(value)
+
+    return simulated_tac_values
+
+if __name__ == "__main__":
+    # Calculate the simulated TAC values:
+    simulated_tac_values = simulated_tac(simulated_c_tissue_values, data_from_first_row['gt_parameters_list'], pchip_bl)
+
+    # Plot the simulated C_Tissue values against the original TAC values
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='red')
+    plt.plot(new_rtim, simulated_c_tissue_values, label='Simulated C_Tissue', color='green')
+    plt.xlabel('Time')
+    plt.title('C-Tissue vs Simulated TAC')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+if __name__ == "__main__":
+    # Plot the simulated TAC values against the original TAC values
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='red')
+    plt.plot(new_rtim, pchip_tac, label='Original TAC', color='blue')
+    plt.xlabel('Time')
+    plt.ylabel('TAC')
+    plt.title('Simulated TAC vs Original TAC')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
