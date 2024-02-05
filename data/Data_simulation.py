@@ -264,7 +264,7 @@ if __name__ == "__main__":
     # Calculate the simulated TAC values:
     simulated_tac_values = simulated_tac(simulated_c_tissue_values, data_from_first_row['gt_parameters_list'], pchip_bl)
 
-    # Plot the simulated C_Tissue values against the original TAC values
+    # Plot the simulated C_Tissue values against the original TAC values:
     plt.figure(figsize=(10, 6))
     plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='red')
     plt.plot(new_rtim, simulated_c_tissue_values, label='Simulated C_Tissue', color='green')
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     plt.show()
 
 if __name__ == "__main__":
-    # Plot the simulated TAC values against the original TAC values
+    # Plot the simulated TAC values against the original TAC values:
     plt.figure(figsize=(10, 6))
     plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='red')
     plt.plot(new_rtim, pchip_tac, label='Original TAC', color='blue')
@@ -285,4 +285,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(True)
     plt.show()
+
+
+
 
