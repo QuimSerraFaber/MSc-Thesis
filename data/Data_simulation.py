@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
     # Divide simulated tac values by constant
     # WARNING: This is a temoporary fix to the scaling issue
-    simulated_c_tissue_values = [x / 1.24 for x in simulated_c_tissue_values]
+    # simulated_c_tissue_values = [x / 1.24 for x in simulated_c_tissue_values]
 
 if __name__ == "__main__":
     # Interpolate TAC values:
