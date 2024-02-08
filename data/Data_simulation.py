@@ -391,3 +391,38 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
+
+if __name__ == "__main__":
+    # Ask the user if they want to generate new data
+    generate = input("Generate data? (y/n): ").lower() == 'y'
+
+    if generate:
+        # Save the generated TAC signal to a npz file
+        noisy_tacs = []
+        gt_parameters = []
+        num_equidistant_points = 2048
+
+        for i in range(0, df.index[-1], 25):
+            data_row = DataLoader(i, df)
+            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points)
+
+            # Append the noisy TAC and ground truth parameters to the lists
+            noisy_tacs.append(noisy_tac)
+            data_row['gt_parameters_list'].extend([0])  # Append an extra zero for k4
+            gt_parameters.append(data_row['gt_parameters_list'])
+
+            # Print the progress
+            if i % 10000 == 0 and i != 0:
+                print(i)
+                print(data_row['gt_parameters_list'])
+            
+        # Convert the lists to numpy arrays
+        noisy_tacs = np.array(noisy_tacs)
+        gt_parameters = np.array(gt_parameters)
+
+        # Save the arrays to a .npz file
+        np.savez('data/internal_data.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
+        print("Data saved to data/internal_data.npz")
+    
+    else:
+        print("Data generation cancelled.")
