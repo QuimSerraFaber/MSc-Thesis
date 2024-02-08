@@ -287,5 +287,107 @@ if __name__ == "__main__":
     plt.show()
 
 
+def adding_noise_simple(simulated_tac_values, new_rtim, original_time):
+    """
+    Adds normal noise to the simulated TAC values.
 
+    Parameters:
+    simulated_tac_values (list): The simulated TAC values.
+    new_rtim (list): The new resampled time points.
+    original_time (list): The original time points.
+
+    Returns:
+    list: The noisy TAC values.
+    list: The added noise.
+    float: The COVi value.
+    """
+    # Convert inputs to numpy arrays for efficient computation
+    simulated_tac_values = np.array(simulated_tac_values)
+    new_rtim = np.array(new_rtim)
+    original_time = np.array(original_time)
+
+    # Get the indices of the closest points in original time to the new resampled time points
+    closest_indices = [np.argmin(np.abs(new_rtim - t)) for t in original_time]
+    
+    # Select the corresponding TAC values based on the closest indices
+    tac_values_at_closest_indices = simulated_tac_values[closest_indices]
+
+    # Get the last three TAC values
+    last_three_tac = tac_values_at_closest_indices[-3:]
+
+    # Calculate the standard deviation using the last three TAC values
+    std_dev = np.std(last_three_tac)
+
+    # Calculate the mean of the last three TAC values
+    mean = np.mean(last_three_tac)
+
+    # Calculate COVi:
+    COVi = std_dev / mean
+
+    # Add Gaussian noise
+    noise = np.random.normal(0, std_dev, len(simulated_tac_values))
+    # noise = np.random.normal(0, 0.02 * mean, len(simulated_tac_values))
+    noisy_tac = simulated_tac_values + noise
+
+    return noisy_tac, noise, COVi
+
+if __name__ == "__main__":
+    noisy_tac, noise, COVi = adding_noise_simple(simulated_tac_values, new_rtim, data_from_first_row['rtim_list'])
+
+    # Plot the noisy TAC values
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red')
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue')
+    plt.xlabel('Time')
+    plt.ylabel('TAC')
+    plt.title('Noisy TAC')
+    plt.text(x=max(new_rtim) * 0.85, y=max(noisy_tac) * 0.2, s=f'COVi: {COVi:.4f}', fontsize=12, color='black')
+    plt.legend()
+    plt.show()
+
+
+def generate_tac(data_row, num_points):
+    """
+    Generates the TAC signal for the given data row.
+
+    Parameters:
+    data_row (pd.Series): The data row containing the required information.
+    num_points (int): The number of points to generate.
+
+    Returns:
+    list: The generated TAC signal.
+    """
+    # Interpolate the required signals using PCHIP
+    new_rtim, _, _, pchip_pl = equidistant_interpolation(data_row['rtim_list'], data_row['pl_list'], num_points)
+    _, _, _, pchip_bl = equidistant_interpolation(data_row['rtim_list'], data_row['tac_list'], num_points)
+
+    # Calculate the IRF values
+    IRF_values = IRF(data_row['gt_parameters_list'], new_rtim)
+
+    # Calculate the C_Tissue values
+    dt = new_rtim[1] - new_rtim[0]
+    simulated_c_tissue_values = c_tissue(IRF_values, pchip_pl, dt)
+
+    # Calculate the simulated TAC values
+    simulated_tac_values = simulated_tac(simulated_c_tissue_values, data_row['gt_parameters_list'], pchip_bl)
+
+    # Add noise to the simulated TAC values
+    noisy_tac, _, _ = adding_noise_simple(simulated_tac_values, new_rtim, data_row['rtim_list'])
+
+    return new_rtim, simulated_tac_values, noisy_tac
+
+if __name__ == "__main__":
+    # Generate the TAC signal for a given row
+    data_row = DataLoader(466540, df)
+    new_rtim, simulated_tac_values, noisy_tac = generate_tac(data_row, num_equidistant_points)
+
+    # Plot the simulated and noisy TAC signals
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue', linewidth=2)
+    plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red', linestyle='--', linewidth=1, alpha=0.7)
+    plt.xlabel('Time')
+    plt.ylabel('TAC')
+    plt.title('Simulated vs Noisy TAC')
+    plt.legend()
+    plt.show()
 
