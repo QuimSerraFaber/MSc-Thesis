@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 
+# Set the random seed for reproducibility
+np.random.seed(42)
+
 if __name__ == "__main__":
     # Load the file into a pandas DataFrame
     df = pd.read_csv('data/all_data_003.csv')
@@ -341,7 +344,7 @@ if __name__ == "__main__":
 
     # Plot the noisy TAC values
     plt.figure(figsize=(10, 6))
-    plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red')
+    plt.plot(new_rtim, noisy_tac, label='Simple noisy TAC', color='red')
     plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue')
     plt.xlabel('Time')
     plt.ylabel('TAC')
@@ -351,15 +354,111 @@ if __name__ == "__main__":
     plt.show()
 
 
-def generate_tac(data_row, num_points):
+def adding_noise_advanced(simulated_tac_values, new_rtim, type='Normal'):
+    """
+    Adds noise to the simulated TAC values in a more advanced way. The variance of the noise is calculated for each tac window.
+
+    Parameters:
+    simulated_tac_values (list): The simulated TAC values.
+    new_rtim (list): The new time points.
+    type (str): The type of noise to add. Either 'Poisson' or 'Normal'.
+
+    Returns:
+    list: The simulated TAC values with added noise.
+    list: The added noise.
+    """
+    # List of original time points
+    times = [0.125, 0.291667, 0.375, 0.458333, 0.583333, 0.75, 0.916667, 1.5, 2.5, 3.5, 4.5, 6.25, 8.75, 12.5, 17.5, 25, 35, 45, 55, 65, 75, 85]
+    lengths = [0.166667, 0.083333, 0.083333, 0.125, 0.166667, 0.166667, 0.583333, 1, 1, 1, 1.75, 1.5, 3.75, 5, 7.5, 10, 10, 10, 10, 10, 10, 10]
+
+    # Find new_rtim values that are closest to the original time points
+    closest_indices = [np.argmin(np.abs(new_rtim - t)) for t in times]
+
+    # Calculate the mean and standard deviation of the TAC values in each window
+    tac_mean_values = []
+    tac_std_dev_values = []
+    for i in range(len(times)):
+        if i == len(times) - 1:
+            # Last interval
+            interval_tac = simulated_tac_values[closest_indices[i]:]
+        else:
+            interval_tac = simulated_tac_values[closest_indices[i]:closest_indices[i+1]]
+        tac_mean_values.append(np.mean(interval_tac))
+        tac_std_dev_values.append(np.std(interval_tac))
+    
+    # Add noise to each window
+    noisy_tac = []
+    noise = []
+    for i in range(len(times)):
+        # Determine start index
+        start_index = closest_indices[i]
+        
+        # Determine end index: If it's the last element, slice to the end of the array. Otherwise, use the next closest index.
+        if i == len(times) - 1:
+            end_index = None 
+        else:
+            end_index = closest_indices[i + 1]
+        
+        # Slicing tac_window and corresponding new_rtim values
+        tac_window = simulated_tac_values[start_index:end_index]
+        rtim_window = new_rtim[start_index:end_index]
+        
+        # Calculate the decay correction factor
+        decay = np.log(2) / 109.8 # Fluorine-18 half-life is 109.8 minutes
+        F_decay = 1 * np.exp(-decay * rtim_window)
+        dcfi = np.trapz(F_decay, rtim_window) / lengths[i]
+
+        # Calculate Ti
+        Ti = tac_mean_values[i] * lengths[i] / dcfi
+
+        # Calculate the local variance
+        local_variance = (dcfi**2 / (lengths[i]**2)) * Ti
+        
+        # Generate the noise
+        if type == 'Poisson':
+            #local_noise = np.random.poisson(0.02 * tac_mean_values[i], size=len(tac_window))
+            local_noise = np.random.poisson(np.sqrt(local_variance), size=len(tac_window))
+        elif type == 'Normal':
+            #local_noise = np.random.normal(0, 0.02 * tac_mean_values[i], size= len(tac_window))
+            local_noise = np.random.normal(0, np.sqrt(local_variance), size=len(tac_window))
+        
+        noise += local_noise.tolist()
+
+    # Add the noise to the simulated TAC values
+    simulated_tac_values = np.array(simulated_tac_values)
+    noise = np.array(noise)
+    noisy_tac = simulated_tac_values + noise
+        
+    return noisy_tac, noise
+
+if __name__ == "__main__":
+    noisy_tac, noise = adding_noise_advanced(simulated_tac_values, new_rtim, 'Normal')
+
+    # Plot the noisy TAC values
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, noisy_tac, label='Advanced noisy TAC', color='red')
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue')
+    plt.xlabel('Time')
+    plt.ylabel('TAC')
+    plt.title('Noisy TAC')
+    plt.text(x=max(new_rtim) * 0.85, y=max(noisy_tac) * 0.2, s=f'COVi: {COVi:.4f}', fontsize=12, color='black')
+    plt.legend()
+    plt.show()
+
+
+def generate_tac(data_row, num_points, type='Simple', COVi=None):
     """
     Generates the TAC signal for the given data row.
 
     Parameters:
     data_row (pd.Series): The data row containing the required information.
     num_points (int): The number of points to generate.
+    type (str): The type of noise to add. Either 'Simple' or 'Advanced'.
+    COVi (float): The COVi value.
 
     Returns:
+    list: The new time points.
+    list: The simulated TAC values.
     list: The generated TAC signal.
     """
     # Interpolate the required signals using PCHIP
@@ -377,12 +476,15 @@ def generate_tac(data_row, num_points):
     simulated_tac_values = simulated_tac(simulated_c_tissue_values, data_row['gt_parameters_list'], pchip_bl)
 
     # Add noise to the simulated TAC values
-    noisy_tac, _, _ = adding_noise_simple(simulated_tac_values, new_rtim, data_row['rtim_list'])
+    if type == 'Simple': # Use the simple noise addition method
+        noisy_tac, _, _ = adding_noise_simple(simulated_tac_values, new_rtim, data_row['rtim_list'], COVi)
+    elif type == 'Advanced': # Use the advanced noise addition method
+        noisy_tac, _ = adding_noise_advanced(simulated_tac_values, new_rtim, 'Normal')
 
     return new_rtim, simulated_tac_values, noisy_tac
 
 if __name__ == "__main__":
-    # Generate the TAC signal for a given row
+    # Generate the TAC signal for a given row using the simple noise addition method
     data_row = DataLoader(466540, df)
     new_rtim, simulated_tac_values, noisy_tac = generate_tac(data_row, num_equidistant_points)
 
@@ -392,7 +494,21 @@ if __name__ == "__main__":
     plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red', linestyle='--', linewidth=1, alpha=0.7)
     plt.xlabel('Time')
     plt.ylabel('TAC')
-    plt.title('Simulated vs Noisy TAC')
+    plt.title('Simulated vs Simple noisy TAC')
+    plt.legend()
+    plt.show()
+
+    # Generate the TAC signal for a given row using the advanced noise addition method
+    data_row = DataLoader(466540, df)
+    new_rtim, simulated_tac_values, noisy_tac = generate_tac(data_row, num_equidistant_points, type='Advanced')
+
+    # Plot the simulated and noisy TAC signals
+    plt.figure(figsize=(10, 6))
+    plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue', linewidth=2)
+    plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red', linestyle='--', linewidth=1, alpha=0.7)
+    plt.xlabel('Time')
+    plt.ylabel('TAC')
+    plt.title('Simulated vs Advanced noisy TAC')
     plt.legend()
     plt.show()
 
@@ -406,10 +522,11 @@ if __name__ == "__main__":
         noisy_tacs = []
         gt_parameters = []
         num_equidistant_points = 2048
+        type = 'Simple'
 
         for i in range(0, df.index[-1], 25):
             data_row = DataLoader(i, df)
-            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points)
+            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points, type)
 
             # Append the noisy TAC and ground truth parameters to the lists
             noisy_tacs.append(noisy_tac)
