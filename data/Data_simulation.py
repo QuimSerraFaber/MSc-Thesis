@@ -287,7 +287,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-def adding_noise_simple(simulated_tac_values, new_rtim, original_time):
+def adding_noise_simple(simulated_tac_values, new_rtim, original_time, COVi=None):
     """
     Adds normal noise to the simulated TAC values.
 
@@ -295,11 +295,12 @@ def adding_noise_simple(simulated_tac_values, new_rtim, original_time):
     simulated_tac_values (list): The simulated TAC values.
     new_rtim (list): The new resampled time points.
     original_time (list): The original time points.
+    COVi (float): The COVi value.
 
     Returns:
     list: The noisy TAC values.
     list: The added noise.
-    float: The COVi value.
+    float: The approximate COVi value.
     """
     # Convert inputs to numpy arrays for efficient computation
     simulated_tac_values = np.array(simulated_tac_values)
@@ -321,15 +322,19 @@ def adding_noise_simple(simulated_tac_values, new_rtim, original_time):
     # Calculate the mean of the last three TAC values
     mean = np.mean(last_three_tac)
 
-    # Calculate COVi:
-    COVi = std_dev / mean
-
-    # Add Gaussian noise
-    noise = np.random.normal(0, std_dev, len(simulated_tac_values))
-    # noise = np.random.normal(0, 0.02 * mean, len(simulated_tac_values))
+    # Calculate approximate COVi:
+    approx_COVi = std_dev / mean
+    
+    # Calculate the noise
+    if COVi is not None: # If COVi is provided, use it to calculate the noise
+        noise = np.random.normal(0, COVi * mean, len(simulated_tac_values))
+    else: # If COVi is not provided, use the standard deviation to calculate the noise
+        noise = np.random.normal(0, std_dev, len(simulated_tac_values))
+        
+    # Add the noise to the simulated TAC values
     noisy_tac = simulated_tac_values + noise
 
-    return noisy_tac, noise, COVi
+    return noisy_tac, noise, approx_COVi
 
 if __name__ == "__main__":
     noisy_tac, noise, COVi = adding_noise_simple(simulated_tac_values, new_rtim, data_from_first_row['rtim_list'])
