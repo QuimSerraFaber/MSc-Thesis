@@ -523,10 +523,11 @@ if __name__ == "__main__":
         gt_parameters = []
         num_equidistant_points = 2048
         type = 'Simple'
+        COVi = None
 
         for i in range(0, df.index[-1], 25):
             data_row = DataLoader(i, df)
-            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points, type)
+            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points, type, COVi)
 
             # Append the noisy TAC and ground truth parameters to the lists
             noisy_tacs.append(noisy_tac)
@@ -544,7 +545,7 @@ if __name__ == "__main__":
 
         # Save the arrays to a .npz file
         np.savez('data/internal_data.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
-        print("Data saved to data/internal_data.npz")
+        print("Data saved to data/Generated_Data/simulation_simple_None.npz")
     
     else:
         print("Data generation cancelled.")
