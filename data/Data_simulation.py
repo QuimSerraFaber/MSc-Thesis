@@ -1,6 +1,3 @@
-# Loads the originally simulated data csv file
-# Uses generates new simulated data for the same parameters
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -522,7 +519,7 @@ if __name__ == "__main__":
         noisy_tacs = []
         gt_parameters = []
         num_equidistant_points = 2048
-        type = 'Simple'
+        type = 'Advanced'
         COVi = None
 
         for i in range(0, df.index[-1], 25):
@@ -544,8 +541,8 @@ if __name__ == "__main__":
         gt_parameters = np.array(gt_parameters)
 
         # Save the arrays to a .npz file
-        np.savez('data/internal_data.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
-        print("Data saved to data/Generated_Data/simulation_simple_None.npz")
+        np.savez('data/Generated_Data/simulation_advanced.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
+        print("Data saved to data/Generated_Data/simulation_advanced.npz")
     
     else:
         print("Data generation cancelled.")
