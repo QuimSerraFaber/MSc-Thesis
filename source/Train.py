@@ -10,14 +10,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from models.Initial_fc_nn import FullyConnectedNN
 from Losses import compute_parameter_loss
-from data.Polynomial_test import load_polynomial_data
 
 
-#inputs = np.random.randn(1000, 10)  # Example input data
-#true_params = np.random.randn(1000, 4)  # Example target parameters
-
-# Load data
-inputs, true_params = load_polynomial_data(num_samples=10000, x_range=(-50, 50), num_points=200, noise_level=0.1, degree=3)
+# Load simulated data from data/Generated_Data/simulation_advanced.npz
+data = np.load("data/Generated_Data/simulation_simple_0.0.npz")
+inputs = data["noisy_tacs"]
+true_params = data["gt_parameters"]
 
 # Convert data to PyTorch tensors
 inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
