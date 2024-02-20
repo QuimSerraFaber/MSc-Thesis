@@ -3,13 +3,13 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader, random_split
 import numpy as np
 
-def training_single_model(data, model, loss_function, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False):
+def training_single_model(data, model_class, loss_function, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False):
     """
     Trains a single model to predict all four parameters.
 
     Parameters:
     data (dict): The data dictionary containing the noisy TAC signals and ground truth parameters.
-    model (nn.Module): The neural network model to train.
+    model_class (nn.Module): The neural network model to train.
     loss_function (nn.Module): The loss function to use.
     batch_size (int): The batch size for training.
     lr (float): The learning rate for the optimizer.
@@ -48,7 +48,7 @@ def training_single_model(data, model, loss_function, batch_size=256, lr=0.001, 
 
     # Initialize the model
     in_features = inputs_tensor.shape[1]
-    model = model(in_features)
+    model = model_class(in_features)
 
     # Define the optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -101,7 +101,8 @@ def training_single_model(data, model, loss_function, batch_size=256, lr=0.001, 
             patience_counter += 1  # Increase patience counter
         
         if patience_counter >= patience:  # Check if patience counter has reached the patience limit
-            print(f"Stopping early at epoch {epoch + 1}")
+            if progress == True:
+                print(f"Stopping early at epoch {epoch + 1}")
             break
 
     # Final evaluation on the validation set
@@ -130,8 +131,9 @@ def training_single_model(data, model, loss_function, batch_size=256, lr=0.001, 
     # Calculate the mean and standard deviation of the percentage differences
     mean_percentage_diff = np.mean(percentage_diff, axis=0)
     std_percentage_diff = np.std(percentage_diff, axis=0)
-    print("Mean percentage difference:", mean_percentage_diff)
-    print("Standard deviation of percentage difference:", std_percentage_diff)
+    if progress == True:
+        print("Mean percentage difference:", mean_percentage_diff)
+        print("Standard deviation of percentage difference:", std_percentage_diff)
     
     return model, best_val_loss, mean_percentage_diff, std_percentage_diff
 
