@@ -8,16 +8,17 @@ from models.Initial_fc_nn import FC_single
 np.random.seed(42)
 
 # Load the data and define the loss function
-data = np.load("data/Generated_Data/simulation_simple_0.05.npz")
+data = np.load("data/Generated_Data/simulation_simple_0.0.npz")
 model_class = FC_single
-loss = nn.MSELoss()
+#loss = nn.MSELoss()
+loss = nn.L1Loss()
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []
 std_percentage_diffs = []
 for i in range(10):
     print(f"Training model {i + 1}")
-    model, best_val_loss, mean_percentage_diff, std_percentage_diff = training_single_model(data, model_class, loss, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False)
+    model, best_val_loss, mean_percentage_diff, std_percentage_diff = training_single_model(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
     # Append the results to the lists
     mean_percentage_diffs.append(mean_percentage_diff)
     std_percentage_diffs.append(std_percentage_diff)
@@ -55,7 +56,7 @@ for i, txt in enumerate(std_percentage_diffs_avg):
 plt.xlim(-0.25, len(parameters)-0.5)  # Set dynamic limits based on the number of parameters
 
 # Customizing the plot
-plt.title('Difference in predictions for a fully connected NN')
+plt.title('Difference in predictions for a fully connected NN: L1 Loss & 10 models')
 plt.xlabel('Parameter')
 plt.ylabel('Mean Percentage Difference [%]')
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
