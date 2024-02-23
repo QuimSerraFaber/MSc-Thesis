@@ -3,6 +3,21 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader, random_split
 import numpy as np
 
+def ki_macro(k1, k2, k3):
+    """
+    Computes the macro parameter k_i from the parameters k1, k2, and k3.
+
+    Parameters:
+    k1 (float): The first parameter.
+    k2 (float): The second parameter.
+    k3 (float): The third parameter.
+
+    Returns:
+    float: The macro rate constant k_i.
+    """
+    ki = (k1 * k2) / (k2 + k3)
+    return ki
+
 def training_single_model(data, model_class, loss_function, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False):
     """
     Trains a single model to predict all four parameters.
@@ -19,9 +34,7 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
 
     Returns:
     nn.Module: The trained model.
-    float: The best validation loss.
-    np.ndarray: The mean percentage difference for each parameter.
-    np.ndarray: The standard deviation of the percentage difference for each parameter.
+    dict: A dictionary containing the best validation loss, mean percentage difference, and standard deviation of the percentage difference.
     """
     # Extract the data from the dictionary
     inputs = data["noisy_tacs"]
@@ -123,6 +136,14 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
     true_params_concat = np.concatenate(true_params_list, axis=0)
     predicted_params_concat = np.concatenate(predicted_params_list, axis=0)
 
+    # Compute k_i for the true and predicted parameters
+    true_ki = ki_macro(true_params_concat[:, 0], true_params_concat[:, 1], true_params_concat[:, 2])
+    predicted_ki = ki_macro(predicted_params_concat[:, 0], predicted_params_concat[:, 1], predicted_params_concat[:, 2])
+
+    # Append k_i as a new column to the true and predicted params
+    true_params_concat = np.column_stack((true_params_concat, true_ki))
+    predicted_params_concat = np.column_stack((predicted_params_concat, predicted_ki))
+
     # Compute the percentile differences for each parameter
     abs_diff = np.abs(true_params_concat - predicted_params_concat)
     epsilon = 1e-8  # Small constant to avoid division by zero
@@ -134,7 +155,24 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
     if progress == True:
         print("Mean percentage difference:", mean_percentage_diff)
         print("Standard deviation of percentage difference:", std_percentage_diff)
+
+    # Calculate the mean and standard deviation of the absolute differences
+    mean_abs_diff = np.mean(abs_diff, axis=0)
+    std_abs_diff = np.std(abs_diff, axis=0)
+    if progress == True:
+        print("Mean absolute difference:", mean_abs_diff)
+        print("Standard deviation of absolute difference:", std_abs_diff)
+
+    # Create dictionary with all the results
+    results = {
+        "best_val_loss": best_val_loss,
+        "mean_percentage_diff": mean_percentage_diff,
+        "std_percentage_diff": std_percentage_diff,
+        "mean_abs_diff": mean_abs_diff,
+        "std_abs_diff": std_abs_diff
+    }
     
-    return model, best_val_loss, mean_percentage_diff, std_percentage_diff
+    
+    return model, results
 
 
