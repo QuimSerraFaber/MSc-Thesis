@@ -11,8 +11,8 @@ np.random.seed(42)
 # Load the data and define the loss function
 data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
 model_class = FC_parallel
-#loss = nn.MSELoss()
-loss = nn.L1Loss()
+loss = nn.MSELoss()
+#loss = nn.L1Loss()
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []

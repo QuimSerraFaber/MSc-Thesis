@@ -213,7 +213,7 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Initialize the models for each parameter
-    models = [FC_parallel(in_features=inputs_tensor.shape[1]) for _ in range(4)]
+    models = [model_class(in_features=inputs_tensor.shape[1]) for _ in range(4)]
 
     # Optimizers (one for each model)
     optimizers = [optim.Adam(model.parameters(), lr=lr) for model in models]
