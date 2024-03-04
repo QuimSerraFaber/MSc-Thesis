@@ -5,6 +5,7 @@
 
 import numpy as np
 import torch
+from Data_simulation import IRF
 
 def MSE(y, y_hat):
     """
@@ -27,6 +28,23 @@ def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
     else:
         # Compute the regular mean difference
         return (predicted_param - true_param).mean()
+    
+
+def TAC_loss(predicted_param, true_param, use_absolute=False):
+    
+    true_tac = []
+    pred_tac = []
+
+    # Get all timepoints
+    timepoints = np.linspace(0.125, 90, 2048)
+
+    # Calculate the impulse response functions:
+    true_irf = IRF(true_param, timepoints)
+    pred_irf = IRF(predicted_param, timepoints)
+
+    # Calculate the C-Tissue values
+    
+
 
 
 
