@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from Data_simulation import IRF, equidistant_interpolation, c_tissue, simulated_tac
+from source.Data_generation import IRF, equidistant_interpolation, c_tissue, simulated_tac
 
 
 def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
