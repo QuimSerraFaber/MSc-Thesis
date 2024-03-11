@@ -14,6 +14,37 @@ def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
         # Compute the regular mean difference
         return (predicted_param - true_param).mean()
     
+    
+def IRF_torch(gt_parameters_tensor, equidistant_rtim_tensor):
+    """
+    Calculates the impulse response function (IRF) for the given parameters and equidistant timepoints using PyTorch.
+
+    Parameters:
+    gt_parameters_tensor (torch.Tensor): Tensor of parameters.
+    equidistant_rtim_tensor (torch.Tensor): Tensor of equidistant timepoints.
+
+    Returns:
+    torch.Tensor: The IRF values.
+    """
+    # Given that gt_parameters_tensor shape is [batch_size, 4]
+    k1, k2, k3 = gt_parameters_tensor[:, 0], gt_parameters_tensor[:, 1], gt_parameters_tensor[:, 2]
+    k4 = torch.zeros_like(k1)  # Ensuring k4 is the same shape and device as k1
+
+    # Calculate alphas for the entire batch
+    sqrt_term = torch.sqrt(torch.clamp((k2 + k3 + k4)**2 - 4*k2*k4, min=0))
+    alpha1 = (k2 + k3 + k4) - sqrt_term / 2.0
+    alpha2 = (k2 + k3 + k4) + sqrt_term / 2.0
+
+    # Calculate IRF for each time point and each batch
+    epsilon = 1e-8
+    equidistant_rtim_tensor = equidistant_rtim_tensor.unsqueeze(0)  # Adding a batch dimension for broadcasting
+    value = ((k3 + k4 - alpha1).unsqueeze(1) * torch.exp(-alpha1.unsqueeze(1) * equidistant_rtim_tensor) + 
+             (alpha2 - k3 - k4).unsqueeze(1) * torch.exp(-alpha2.unsqueeze(1) * equidistant_rtim_tensor)) / (alpha2 - alpha1 + epsilon).unsqueeze(1)
+    
+    IRF = value * k1.unsqueeze(1)  # Ensuring k1 is correctly broadcasted over the time dimension
+
+    return IRF
+    
 
 def TAC_loss(true_param, predicted_param, num_equidistant_points = 2048):
     """
