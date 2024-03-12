@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from source.Data_generation import IRF, equidistant_interpolation, c_tissue, simulated_tac
 
 
@@ -44,7 +45,42 @@ def IRF_torch(gt_parameters_tensor, equidistant_rtim_tensor):
     IRF = value * k1.unsqueeze(1)  # Ensuring k1 is correctly broadcasted over the time dimension
 
     return IRF
-    
+
+
+def c_tissue_torch(IRF_tensor, pchip_tensor, dt):
+    """
+    Calculates the simulated C_Tissue values for the given IRF and plasma concentration values using PyTorch.
+    This version ensures that inputs and kernels are properly shaped for PyTorch's conv1d.
+
+    Parameters:
+    IRF_tensor (torch.Tensor): The IRF values as a tensor.
+    pchip_tensor (torch.Tensor): Plasma concentration values as a tensor, interpolated using PCHIP or equivalent.
+    dt (float): The time step increment.
+
+    Returns:
+    torch.Tensor: The simulated C_Tissue values as a tensor.
+    """
+    # Ensure tensors have the correct shape (Batch, Channel, Length)
+    if IRF_tensor.dim() == 1:
+        IRF_tensor = IRF_tensor.unsqueeze(0).unsqueeze(0)
+    elif IRF_tensor.dim() == 2:
+        IRF_tensor = IRF_tensor.unsqueeze(1)
+
+    if pchip_tensor.dim() == 1:
+        pchip_tensor = pchip_tensor.unsqueeze(0).unsqueeze(0)
+    elif pchip_tensor.dim() == 2:
+        pchip_tensor = pchip_tensor.unsqueeze(1)
+
+    # Perform 1D convolution. Flip the IRF tensor because PyTorch's conv1d performs cross-correlation.
+    padding_size = (IRF_tensor.size(-1) - 1)
+    simulated_c_tissue_values = F.conv1d(pchip_tensor, IRF_tensor.flip(dims=[-1]), padding=padding_size)[:,:,:pchip_tensor.size(-1)]
+
+    # Normalize the convolution result by multiplying by dt
+    normalized_result_tensor = simulated_c_tissue_values * dt
+
+    # Remove unnecessary batch and channel dimensions before returning
+    return normalized_result_tensor.squeeze()
+
 
 def TAC_loss(true_param, predicted_param, num_equidistant_points = 2048):
     """
