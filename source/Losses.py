@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from source.Data_generation import equidistant_interpolation
+from Data_generation import equidistant_interpolation
 
 
 def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
