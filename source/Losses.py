@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from source.Data_generation import IRF, equidistant_interpolation, c_tissue, simulated_tac
+from source.Data_generation import equidistant_interpolation
 
 
 def compute_parameter_loss(predicted_param, true_param, use_absolute=False):
@@ -82,7 +82,29 @@ def c_tissue_torch(IRF_tensor, pchip_tensor, dt):
     return normalized_result_tensor.squeeze()
 
 
-def TAC_loss(true_param, predicted_param, num_equidistant_points = 2048):
+def simulated_tac_torch(c_tissue, gt_parameters, bl_tensor):
+    """
+    Calculates the simulated TAC values for the given C_Tissue and blood concentration values using PyTorch.
+
+    Parameters:
+    c_tissue (torch.Tensor): The C_Tissue values with shape [batch_size, num_points].
+    gt_parameters (torch.Tensor): The ground truth parameters with shape [batch_size, num_params].
+    bl_tensor (torch.Tensor): Blood concentration values with shape [num_points].
+
+    Returns:
+    torch.Tensor: The simulated TAC values with shape [batch_size, num_points].
+    """
+    # Extracting the 'vb' parameter from the ground truth parameters, assuming it is the fourth parameter
+    # The shape of vb is [batch_size, 1] after unsqueezing
+    vb = gt_parameters[:, 3].unsqueeze(1)
+
+    # Broadcasting 'vb' and 'bl_tensor' across the batch size and num_points, respectively, for efficient computation
+    simulated_tac_values = c_tissue * (1 - vb) + vb * bl_tensor
+
+    return simulated_tac_values
+
+
+def TAC_loss(predicted_param, true_param, num_equidistant_points = 2048):
     """
     Calculate the loss between the true and predicted TAC values.
 
@@ -94,7 +116,7 @@ def TAC_loss(true_param, predicted_param, num_equidistant_points = 2048):
     Returns:
     torch.Tensor: Mean squared error between the true and predicted TAC values
     """
-    
+    # Fixed data values
     rtim_list = [0.125, 0.291667, 0.375, 0.458333, 0.583333, 0.75, 0.916667, 1.5, 2.5, 3.5, 4.5, 6.25, 8.75, 12.5, 
                  17.5, 25, 35, 45, 55, 65, 75, 85]
     pl_list = [0.05901, 0.0550587, 110.023, 83.0705, 55.6943, 44.4686, 36.9873, 27.5891, 13.5464, 6.33916, 3.52664, 
@@ -106,25 +128,31 @@ def TAC_loss(true_param, predicted_param, num_equidistant_points = 2048):
     new_rtim, _, _, pchip_pl = equidistant_interpolation(rtim_list, pl_list, num_equidistant_points)
     _, _, _, pchip_bl = equidistant_interpolation(rtim_list, bl_list, num_equidistant_points)
 
-    # Convert parameter tensors to numpy arrays
-    true_param = true_param.detach().cpu().numpy()
-    predicted_param = predicted_param.detach().cpu().numpy()
-
+    # Convert the interpolated plasma and blood concentration values to PyTorch tensors
+    pchip_pl_tensor = torch.tensor(pchip_pl, dtype=torch.float32)
+    pchip_bl_tensor = torch.tensor(pchip_bl, dtype=torch.float32)
+    new_rtim_tensor = torch.tensor(new_rtim, dtype=torch.float32)
+    
     # Calculate the impulse response functions:
-    true_irf = IRF(true_param, new_rtim)
-    pred_irf = IRF(predicted_param, new_rtim)
+    true_irf = IRF_torch(true_param, new_rtim_tensor)
+    pred_irf = IRF_torch(predicted_param, new_rtim_tensor)
 
     # Calculate the C-Tissue values
     dt = new_rtim[1] - new_rtim[0]
-    true_ct = c_tissue(true_irf, pchip_pl, dt)
-    pred_ct = c_tissue(pred_irf, pchip_pl, dt)
+    true_c_tissue = c_tissue_torch(true_irf, pchip_pl_tensor, dt)
+    pred_c_tissue = c_tissue_torch(pred_irf, pchip_pl_tensor, dt)
 
-    # Calculate the TAC values
-    true_tac = simulated_tac(true_ct, true_param, pchip_bl)
-    pred_tac = simulated_tac(pred_ct, predicted_param, pchip_bl)
+    # Calculate the simulated TAC values
+    true_tac = simulated_tac_torch(true_c_tissue, true_param, pchip_bl_tensor)
+    pred_tac = simulated_tac_torch(pred_c_tissue, predicted_param, pchip_bl_tensor)
 
-    # Calculate the mean squared error between the true and predicted TAC
-    return nn.MSELoss()(torch.tensor(true_tac), torch.tensor(pred_tac))
+    # # Plot one of the tac values for verification
+    # plt.plot(true_tac[0])
+    # plt.show()
+    # plt.plot(pred_tac[0].detach().numpy())
+    # plt.show()
+
+    return nn.MSELoss()(true_tac, pred_tac)
 
 
 
