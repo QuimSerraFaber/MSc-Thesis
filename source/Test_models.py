@@ -9,6 +9,7 @@ from Losses import TAC_loss
 
 # Set the random seed for reproducibility
 np.random.seed(42)
+torch.manual_seed(42)
 
 # Load the data and define the loss function
 data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
