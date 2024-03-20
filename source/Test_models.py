@@ -1,5 +1,6 @@
 import torch.nn as nn
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
