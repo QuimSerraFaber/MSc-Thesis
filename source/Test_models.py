@@ -16,71 +16,72 @@ torch.manual_seed(42)
 data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
 model_class = FC_parallel
 #loss = nn.MSELoss()
-#loss = nn.L1Loss()
-loss = TAC_loss
+loss = nn.L1Loss()
+#loss = TAC_loss
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []
 std_percentage_diffs = []
-mean_absolute_diffs = []
-std_absolute_diffs = []
-for i in range(10):
+mean_diffs = []
+std_diffs = []
+n_models = 3
+for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_parallel_models(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
+    model, results = training_parallel_models(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=False)
     # Append the results to the lists
     mean_percentage_diffs.append(results["mean_percentage_diff"])
     std_percentage_diffs.append(results["std_percentage_diff"])
-    mean_absolute_diffs.append(results["mean_abs_diff"])
-    std_absolute_diffs.append(results["std_abs_diff"])
+    mean_diffs.append(results["mean_diff"])
+    std_diffs.append(results["std_diff"])
 
 # Convert lists to 2D numpy arrays
 mean_percentage_diffs_array = np.array(mean_percentage_diffs)
 std_percentage_diffs_array = np.array(std_percentage_diffs)
-mean_absolute_diffs_array = np.array(mean_absolute_diffs)
-std_absolute_diffs_array = np.array(std_absolute_diffs)
+mean_diffs_array = np.array(mean_diffs)
+std_diffs_array = np.array(std_diffs)
 
 # Calculate the average of each column
 mean_percentage_diffs_avg = np.mean(mean_percentage_diffs_array, axis=0)
 std_percentage_diffs_avg = np.mean(std_percentage_diffs_array, axis=0)
-mean_absolute_diffs_avg = np.mean(mean_absolute_diffs_array, axis=0)
-std_absolute_diffs_avg = np.mean(std_absolute_diffs_array, axis=0)
+mean_diffs_avg = np.mean(mean_diffs_array, axis=0)
+std_diffs_avg = np.mean(std_diffs_array, axis=0)
 
 # Print the average values for each column
 print("Average of mean percentage differences:", mean_percentage_diffs_avg)
 print("Average of std percentage differences:", std_percentage_diffs_avg)
-print("Average of mean absolute differences:", mean_absolute_diffs_avg)
-print("Average of std absolute differences:", std_absolute_diffs_avg)
+print("Average of mean differences:", mean_diffs_avg)
+print("Average of std differences:", std_diffs_avg)
 
 # Custom parameter labels
 parameters = ['k1', 'k2', 'k3', 'vb', 'ki']
 
 # Plotting the percentile differences
 plt.figure(figsize=(10, 6))
-# Error bars for the standard deviation
+# Error bars for the standard deviation (symmetrical)
 errorbar_container = plt.errorbar(parameters, mean_percentage_diffs_avg, 
-             yerr=[np.zeros_like(std_percentage_diffs_avg), std_percentage_diffs_avg], 
+             yerr=[std_percentage_diffs_avg, std_percentage_diffs_avg],  # Symmetrical error bars
              fmt='s', capsize=5, capthick=2, ecolor='red', markersize=5, 
              linestyle='None', label='Average Std')
 
-# Annotating each point with its value
-for i, txt in enumerate(mean_percentage_diffs_avg):
-    plt.annotate(f'{txt:.2f}', (parameters[i], mean_percentage_diffs_avg[i]), textcoords="offset points", xytext=(25,0), ha='center')
-for i, txt in enumerate(std_percentage_diffs_avg):
-    plt.annotate(f'{txt:.2f}', (parameters[i], mean_percentage_diffs_avg[i] + std_percentage_diffs_avg[i]), textcoords="offset points", xytext=(25,0), ha='center')
+# Annotating each point with its mean value +- std
+for i, (mean, std) in enumerate(zip(mean_percentage_diffs_avg, std_percentage_diffs_avg)):
+    plt.annotate(f'{mean:.2f} ± {std:.2f}', (parameters[i], mean), textcoords="offset points", xytext=(10,0), ha='left')
+
 
 # Extending the graph to the right by adjusting x-axis limits
-plt.xlim(-0.25, len(parameters)-0.5)  # Set dynamic limits based on the number of parameters
+plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
 # Customizing the plot
-plt.title('Percentile difference in predictions for a fully connected NN: MSE Loss & 10 models')
+plt.title(f'Percentile difference in predictions: single architecture, {loss} & {n_models} models')
 plt.xlabel('Parameter')
-plt.ylabel('Mean Percentage Difference [%]')
+plt.ylabel('Average Percentage Difference [%]')
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+#plt.axhline(0, color='black', linestyle='--')  # Dashed line at 0
 
 # Handling legend for both Average Difference and Average Std
 plt.scatter(parameters, mean_percentage_diffs_avg, color='blue', label='Average Difference')
-plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Mean Percentage Difference'),
-                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Mean Std of Percentage Difference')],
+plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Average Percentage Difference'),
+                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Average Std of Percentage Difference')],
            loc='best')
 
 # Show plot
@@ -89,30 +90,29 @@ plt.show()
 # Plotting the absolute differences
 plt.figure(figsize=(10, 6))
 # Error bars for the standard deviation
-errorbar_container = plt.errorbar(parameters, mean_absolute_diffs_avg, 
-             yerr=[np.zeros_like(std_absolute_diffs_avg), std_absolute_diffs_avg], 
-             fmt='s', capsize=5, capthick=2, ecolor='red', markersize=5, 
-             linestyle='None', label='Average Std')
+errorbar_container = plt.errorbar(parameters, mean_diffs_avg,
+                yerr=[std_diffs_avg, std_diffs_avg],  # Symmetrical error bars
+                fmt='s', capsize=5, capthick=2, ecolor='red', markersize=5,
+                linestyle='None', label='Average Std')
 
 # Annotating each point with its value
-for i, txt in enumerate(mean_absolute_diffs_avg):
-    plt.annotate(f'{txt:.2f}', (parameters[i], mean_absolute_diffs_avg[i]), textcoords="offset points", xytext=(25,0), ha='center')
-for i, txt in enumerate(std_absolute_diffs_avg):
-    plt.annotate(f'{txt:.2f}', (parameters[i], mean_absolute_diffs_avg[i] + std_absolute_diffs_avg[i]), textcoords="offset points", xytext=(25,0), ha='center')
+for i, (mean, std) in enumerate(zip(mean_diffs_avg, std_diffs_avg)):
+    plt.annotate(f'{mean:.2f} ± {std:.2f}', (parameters[i], mean), textcoords="offset points", xytext=(10,0), ha='left')
 
 # Extending the graph to the right by adjusting x-axis limits
-plt.xlim(-0.25, len(parameters)-0.5)  # Set dynamic limits based on the number of parameters
+plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
 # Customizing the plot
-plt.title('Asbolute difference in predictions for a fully connected NN: MSE Loss & 10 models')
+plt.title(f'Difference in predictions: single architecture, {loss} & {n_models} models')
 plt.xlabel('Parameter')
-plt.ylabel('Mean Absolute Difference')
+plt.ylabel('Average Absolute Difference')
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+#plt.axhline(0, color='black', linestyle='--')  # Dashed line at 0
 
 # Handling legend for both Average Difference and Average Std
-plt.scatter(parameters, mean_absolute_diffs_avg, color='blue', label='Average Difference')
-plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Mean Absolute Difference'),
-                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Mean Std of Absolute Difference')],
+plt.scatter(parameters, mean_diffs_avg, color='blue', label='Average Difference')
+plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Average Difference'),
+                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Average Std of Difference')],
            loc='best')
 
 # Show plot

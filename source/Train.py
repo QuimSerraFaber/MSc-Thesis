@@ -141,9 +141,9 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
     predicted_params_concat = np.column_stack((predicted_params_concat, predicted_ki))
 
     # Compute the percentile differences for each parameter
-    abs_diff = np.abs(true_params_concat - predicted_params_concat)
+    diff = true_params_concat - predicted_params_concat
     epsilon = 1e-8  # Small constant to avoid division by zero
-    percentage_diff = (abs_diff / (true_params_concat + epsilon)) * 100
+    percentage_diff = (diff / (true_params_concat + epsilon)) * 100
 
     # Calculate the mean and standard deviation of the percentage differences
     mean_percentage_diff = np.mean(percentage_diff, axis=0)
@@ -152,20 +152,20 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
         print("Mean percentage difference:", mean_percentage_diff)
         print("Standard deviation of percentage difference:", std_percentage_diff)
 
-    # Calculate the mean and standard deviation of the absolute differences
-    mean_abs_diff = np.mean(abs_diff, axis=0)
-    std_abs_diff = np.std(abs_diff, axis=0)
+    # Calculate the mean and standard deviation of the differences
+    mean_diff = np.mean(diff, axis=0)
+    std_diff = np.std(diff, axis=0)
     if progress == True:
-        print("Mean absolute difference:", mean_abs_diff)
-        print("Standard deviation of absolute difference:", std_abs_diff)
+        print("Mean difference:", mean_diff)
+        print("Standard deviation of difference:", std_diff)
 
     # Create dictionary with all the results
     results = {
         "best_val_loss": best_val_loss,
         "mean_percentage_diff": mean_percentage_diff,
         "std_percentage_diff": std_percentage_diff,
-        "mean_abs_diff": mean_abs_diff,
-        "std_abs_diff": std_abs_diff
+        "mean_diff": mean_diff,
+        "std_diff": std_diff
     }
     
     return model, results
@@ -303,7 +303,6 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
     true_params_concat = np.concatenate([np.concatenate(lst, axis=0).reshape(-1, 1) for lst in true_params_lists], axis=1)
     predicted_params_concat = np.concatenate([np.concatenate(lst, axis=0).reshape(-1, 1) for lst in predicted_params_lists], axis=1)
 
-
     # Compute k_i for the true and predicted parameters
     true_ki = ki_macro(true_params_concat[:, 0], true_params_concat[:, 1], true_params_concat[:, 2])
     predicted_ki = ki_macro(predicted_params_concat[:, 0], predicted_params_concat[:, 1], predicted_params_concat[:, 2])
@@ -313,9 +312,9 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
     predicted_params_concat = np.column_stack((predicted_params_concat, predicted_ki))
 
     # Compute the percentile differences for each parameter
-    abs_diff = np.abs(true_params_concat - predicted_params_concat)
+    diff = true_params_concat - predicted_params_concat
     epsilon = 1e-8  # Small constant to avoid division by zero
-    percentage_diff = (abs_diff / (true_params_concat + epsilon)) * 100
+    percentage_diff = (diff / (true_params_concat + epsilon)) * 100
 
     # Calculate the mean and standard deviation of the percentage differences
     mean_percentage_diff = np.mean(percentage_diff, axis=0)
@@ -325,19 +324,19 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
         print("Standard deviation of percentage difference:", std_percentage_diff)
 
     # Calculate the mean and standard deviation of the absolute differences
-    mean_abs_diff = np.mean(abs_diff, axis=0)
-    std_abs_diff = np.std(abs_diff, axis=0)
+    mean_diff = np.mean(diff, axis=0)
+    std_diff = np.std(diff, axis=0)
     if progress == True:
-        print("Mean absolute difference:", mean_abs_diff)
-        print("Standard deviation of absolute difference:", std_abs_diff)
+        print("Mean absolute difference:", mean_diff)
+        print("Standard deviation of absolute difference:", std_diff)
     
     # Create dictionary with all the results
     results = {
         "best_val_loss": best_val_loss,
         "mean_percentage_diff": mean_percentage_diff,
         "std_percentage_diff": std_percentage_diff,
-        "mean_abs_diff": mean_abs_diff,
-        "std_abs_diff": std_abs_diff
+        "mean_diff": mean_diff,
+        "std_diff": std_diff
     }
     
     return model, results
