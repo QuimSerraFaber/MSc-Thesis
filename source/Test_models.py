@@ -13,21 +13,21 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 # Load the data and define the loss function
-data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
-model_class = FC_parallel
+data = np.load("data/Generated_Data/simulation_simple_0.05.npz")
+model_class = FC_single_bounded
 #loss = nn.MSELoss()
-loss = nn.L1Loss()
-#loss = TAC_loss
+#loss = nn.L1Loss()
+loss = TAC_loss
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []
 std_percentage_diffs = []
 mean_diffs = []
 std_diffs = []
-n_models = 3
+n_models = 10
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_parallel_models(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=False)
+    model, results = training_single_model(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
     # Append the results to the lists
     mean_percentage_diffs.append(results["mean_percentage_diff"])
     std_percentage_diffs.append(results["std_percentage_diff"])
@@ -72,16 +72,16 @@ for i, (mean, std) in enumerate(zip(mean_percentage_diffs_avg, std_percentage_di
 plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
 # Customizing the plot
-plt.title(f'Percentile difference in predictions: single architecture, {loss} & {n_models} models')
+plt.title(f'Percentual difference in predictions: {model_class.__name__}, {loss} & {n_models} models')
 plt.xlabel('Parameter')
-plt.ylabel('Average Percentage Difference [%]')
+plt.ylabel('Average Percentual Difference [%]')
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 #plt.axhline(0, color='black', linestyle='--')  # Dashed line at 0
 
 # Handling legend for both Average Difference and Average Std
 plt.scatter(parameters, mean_percentage_diffs_avg, color='blue', label='Average Difference')
-plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Average Percentage Difference'),
-                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Average Std of Percentage Difference')],
+plt.legend(handles=[plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='blue', markersize=5, label='Average Percentual Difference'),
+                    plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='red', markersize=5, label='Average Std of Percentual Difference')],
            loc='best')
 
 # Show plot
@@ -103,7 +103,7 @@ for i, (mean, std) in enumerate(zip(mean_diffs_avg, std_diffs_avg)):
 plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
 # Customizing the plot
-plt.title(f'Difference in predictions: single architecture, {loss} & {n_models} models')
+plt.title(f'Difference in predictions: {model_class.__name__}, {loss} & {n_models} models')
 plt.xlabel('Parameter')
 plt.ylabel('Average Absolute Difference')
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
