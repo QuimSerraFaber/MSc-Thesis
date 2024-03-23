@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
 from models.FC_nn_single_bounded import FC_single_bounded
-from models.FC_nn_parallel import FC_parallel
+from models.FC_nn_parallel import *
 from Losses import TAC_loss
 
 # Set the random seed for reproducibility
@@ -13,11 +13,11 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 # Load the data and define the loss function
-data = np.load("data/Generated_Data/simulation_simple_0.05.npz")
-model_class = FC_single_bounded
+data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
+model_class = FC_parallel_bounded
 #loss = nn.MSELoss()
-#loss = nn.L1Loss()
-loss = TAC_loss
+loss = nn.L1Loss()
+#loss = TAC_loss
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []
@@ -27,7 +27,7 @@ std_diffs = []
 n_models = 10
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_single_model(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
+    model, results = training_parallel_models(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
     # Append the results to the lists
     mean_percentage_diffs.append(results["mean_percentage_diff"])
     std_percentage_diffs.append(results["std_percentage_diff"])
