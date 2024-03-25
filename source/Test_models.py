@@ -13,21 +13,30 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 # Load the data and define the loss function
-data = np.load("data/Generated_Data/simulation_simple_0.01.npz")
-model_class = FC_parallel_bounded
 #loss = nn.MSELoss()
-loss = nn.L1Loss()
-#loss = TAC_loss
+#loss = nn.L1Loss()
+loss = TAC_loss
+config = { 
+    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
+    'model_class': FC_single_bounded,
+    'loss_function': loss,
+    'batch_size': 1028,
+    'lr': 0.0001,
+    'patience': 5,
+    'epochs': 50,
+    'progress': True,
+    'TAC_loss': True
+}
 
 # Initialize lists to collect the arrays
 mean_percentage_diffs = []
 std_percentage_diffs = []
 mean_diffs = []
 std_diffs = []
-n_models = 10
+n_models = 3
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_parallel_models(data, model_class, loss, batch_size=1028, lr=0.001, patience=5, epochs=50, progress=True)
+    model, results = training_single_model(config)
     # Append the results to the lists
     mean_percentage_diffs.append(results["mean_percentage_diff"])
     std_percentage_diffs.append(results["std_percentage_diff"])

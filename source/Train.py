@@ -18,24 +18,29 @@ def ki_macro(k1, k2, k3):
     ki = (k1 * k2) / (k2 + k3)
     return ki
 
-def training_single_model(data, model_class, loss_function, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False):
+def training_single_model(config):
     """
     Trains a single model to predict all four parameters.
 
     Parameters:
-    data (dict): The data dictionary containing the noisy TAC signals and ground truth parameters.
-    model_class (nn.Module): The neural network model to train.
-    loss_function (nn.Module): The loss function to use.
-    batch_size (int): The batch size for training.
-    lr (float): The learning rate for the optimizer.
-    patience (int): The patience for early stopping.
-    epochs (int): The maximum number of epochs to train.
-    progress (bool): Whether to print the validation loss at each epoch.
+    config (dict): A dictionary containing all the settings for training the model.
 
     Returns:
     nn.Module: The trained model.
     dict: A dictionary containing the best validation loss, mean percentage difference, and standard deviation of the percentage difference.
     """
+    # Extracting configuration values
+    data = config['data']
+    model_class = config['model_class']
+    loss_function = config['loss_function']
+    batch_size = config.get('batch_size', 1028)  # Example of providing default values
+    lr = config.get('lr', 0.001)
+    patience = config.get('patience', 5)
+    epochs = config.get('epochs', 50)
+    progress = config.get('progress', False)
+    TAC_loss = config.get('TAC_loss', False)  # Whether to use the TAC loss or traditional loss
+
+
     # Extract the data from the dictionary
     inputs = data["noisy_tacs"]
     true_params = data["gt_parameters"]
@@ -81,7 +86,10 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
             predicted_params = model(inputs)
 
             # Compute the loss
-            loss = loss_function(predicted_params, true_params)
+            if TAC_loss:
+                loss = loss_function(predicted_params, inputs)
+            else:
+                loss = loss_function(predicted_params, true_params)
 
             # Backward pass
             loss.backward()
@@ -95,7 +103,10 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
         with torch.no_grad():
             for inputs, true_params in val_dataloader:
                 predicted_params = model(inputs)
-                loss = loss_function(predicted_params, true_params)
+                if TAC_loss:
+                    loss = loss_function(predicted_params, inputs)
+                else:
+                    loss = loss_function(predicted_params, true_params)
                 total_val_loss += loss.item()
         
         avg_val_loss = total_val_loss / len(val_dataloader)
@@ -123,7 +134,10 @@ def training_single_model(data, model_class, loss_function, batch_size=256, lr=0
     with torch.no_grad():
         for inputs, true_params in val_dataloader:
             predicted_params = model(inputs)
-            loss = loss_function(predicted_params, true_params)
+            if TAC_loss:
+                loss = loss_function(predicted_params, inputs)
+            else:
+                loss = loss_function(predicted_params, true_params)
             total_val_loss += loss.item()
             true_params_list.append(true_params.numpy())
             predicted_params_list.append(predicted_params.numpy())

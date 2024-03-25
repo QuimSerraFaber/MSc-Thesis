@@ -104,7 +104,7 @@ def simulated_tac_torch(c_tissue, gt_parameters, bl_tensor):
     return simulated_tac_values
 
 
-def TAC_loss(predicted_param, true_param, num_equidistant_points = 2048):
+def TAC_loss(predicted_param, inputs, num_equidistant_points = 2048):
     """
     Calculate the loss between the true and predicted TAC values.
 
@@ -134,25 +134,25 @@ def TAC_loss(predicted_param, true_param, num_equidistant_points = 2048):
     new_rtim_tensor = torch.tensor(new_rtim, dtype=torch.float32)
     
     # Calculate the impulse response functions:
-    true_irf = IRF_torch(true_param, new_rtim_tensor)
     pred_irf = IRF_torch(predicted_param, new_rtim_tensor)
 
     # Calculate the C-Tissue values
     dt = new_rtim[1] - new_rtim[0]
-    true_c_tissue = c_tissue_torch(true_irf, pchip_pl_tensor, dt)
     pred_c_tissue = c_tissue_torch(pred_irf, pchip_pl_tensor, dt)
 
+    # # prints
+    # print("pred_c_tissue:", pred_c_tissue.shape)
+    # print("pred para:", predicted_param.shape)
+    # print("inputs:", inputs.shape)
+
     # Calculate the simulated TAC values
-    true_tac = simulated_tac_torch(true_c_tissue, true_param, pchip_bl_tensor)
     pred_tac = simulated_tac_torch(pred_c_tissue, predicted_param, pchip_bl_tensor)
 
     # # Plot one of the tac values for verification
-    # plt.plot(true_tac[0])
-    # plt.show()
     # plt.plot(pred_tac[0].detach().numpy())
     # plt.show()
 
-    return nn.MSELoss()(true_tac, pred_tac)
+    return nn.MSELoss()(inputs, pred_tac)
 
 
 
