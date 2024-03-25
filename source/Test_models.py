@@ -21,7 +21,7 @@ config = {
     'model_class': FC_single_bounded,
     'loss_function': loss,
     'batch_size': 1028,
-    'lr': 0.0001,
+    'lr': 0.001,
     'patience': 5,
     'epochs': 50,
     'progress': True,
@@ -33,7 +33,7 @@ mean_percentage_diffs = []
 std_percentage_diffs = []
 mean_diffs = []
 std_diffs = []
-n_models = 3
+n_models = 5
 for i in range(n_models):
     print(f"Training model {i + 1}")
     model, results = training_single_model(config)

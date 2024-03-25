@@ -24,6 +24,15 @@ def training_single_model(config):
 
     Parameters:
     config (dict): A dictionary containing all the settings for training the model.
+    data (dict): The data dictionary containing the noisy TAC signals and ground truth parameters.
+    model_class (nn.Module): The neural network model to train.
+    loss_function (nn.Module): The loss function to use.
+    batch_size (int): The batch size for training.
+    lr (float): The learning rate for the optimizer.
+    patience (int): The patience for early stopping.
+    epochs (int): The maximum number of epochs to train.
+    progress (bool): Whether to print the validation loss at each epoch.
+    TAC_loss (bool): Whether to use the TAC loss or traditional loss.
 
     Returns:
     nn.Module: The trained model.
@@ -86,8 +95,8 @@ def training_single_model(config):
             predicted_params = model(inputs)
 
             # Compute the loss
-            if TAC_loss:
-                loss = loss_function(predicted_params, inputs)
+            if TAC_loss: 
+                loss = loss_function(predicted_params, inputs) 
             else:
                 loss = loss_function(predicted_params, true_params)
 
