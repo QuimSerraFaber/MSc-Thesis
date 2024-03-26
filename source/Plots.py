@@ -2,7 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_mean_variance(results_list, config):
+    """
+    Plot the mean and variance of the results from multiple models.
+    The function calculates the mean and standard deviation of the percentage differences and differences for each parameter.
+    It then plots the average percentage differences and differences for each parameter.
 
+    Parameters:
+    results_list (list): A list of dictionaries containing the true and predicted parameters for each model.
+    config (dict): A dictionary containing the configuration parameters for the model training.
+    """
+    # Extract the configuration parameters
     model_class = config['model_class']
     loss = config['loss_function']
     n_models = config['n_models']
@@ -119,4 +128,125 @@ def plot_mean_variance(results_list, config):
             loc='best')
 
     # Show plot
+    plt.show()
+
+
+def distribution_mean_std(results_list):
+    """
+    Plot the mean and standard deviation of the results from multiple models.
+    The function calculates the mean and standard deviation of the percentage differences and differences for each parameter.
+    It then plots the average percentage differences and differences for each parameter.
+
+    Parameters:
+    results_list (list): A list of dictionaries containing the true and predicted parameters for each model.
+    """
+    # Initialize lists to store the mean and standard deviation of the percentage differences and differences
+    mean_percentage_diffs = []
+    std_percentage_diffs = []
+    mean_diffs = []
+    std_diffs = []
+
+    # Iterate over results list
+    for i, results in enumerate(results_list):
+        true_params = results["true_params"]
+        predicted_params = results["predicted_params"]
+
+        # Compute the percentile differences for each parameter
+        diff = true_params - predicted_params
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        percentage_diff = (diff / (true_params + epsilon)) * 100
+
+        # Calculate the mean and standard deviation of the percentage differences
+        mean_percentage_diff = np.mean(percentage_diff, axis=0)
+        std_percentage_diff = np.std(percentage_diff, axis=0)
+
+        # Calculate the mean and standard deviation of the differences
+        mean_diff = np.mean(diff, axis=0)
+        std_diff = np.std(diff, axis=0)
+
+        # Append the results to the lists
+        mean_percentage_diffs.append(mean_percentage_diff)
+        std_percentage_diffs.append(std_percentage_diff)
+        mean_diffs.append(mean_diff)
+        std_diffs.append(std_diff)
+
+    # Convert lists to 2D numpy arrays
+    mean_percentage_diffs_array = np.array(mean_percentage_diffs)
+    std_percentage_diffs_array = np.array(std_percentage_diffs)
+    mean_diffs_array = np.array(mean_diffs)
+    std_diffs_array = np.array(std_diffs)
+
+    # Parameters labels
+    parameters = ['k1', 'k2', 'k3', 'vb', 'ki']
+    colors = ['blue', 'green', 'red', 'purple', 'orange']  # Different colors for each parameter line
+
+    # Creating side-by-side plots
+    fig, axs = plt.subplots(1, 2, figsize=(18, 6))
+
+    # Calculate individual max values for adjusting y-axis range
+    mean_max_abs_value = np.max(np.abs(mean_percentage_diffs_array)) * 1.1
+    std_max_value = np.max(std_percentage_diffs_array) * 1.1  # std values are only positive
+
+    # Plotting mean percentual differences
+    for idx, param in enumerate(parameters):
+        axs[0].plot(range(1, len(mean_percentage_diffs_array)+1), mean_percentage_diffs_array[:, idx], label=param, color=colors[idx])
+    axs[0].set_title('Mean Percentual Difference per Model')
+    axs[0].set_xlabel('Model')
+    axs[0].set_ylabel('Mean Percentual Difference [%]')
+    axs[0].axhline(y=0, color='black', linestyle='--')
+    axs[0].set_xticks(range(1, len(mean_percentage_diffs_array) + 1))
+    axs[0].set_ylim([-mean_max_abs_value, mean_max_abs_value])
+    axs[0].set_yticks(np.linspace(-mean_max_abs_value, mean_max_abs_value, num=5))
+    axs[0].legend()
+
+    # Plotting std percentual differences
+    for idx, param in enumerate(parameters):
+        axs[1].plot(range(1, len(std_percentage_diffs_array)+1), std_percentage_diffs_array[:, idx], label=param, color=colors[idx])
+    axs[1].set_title('Std Percentual Difference per Model')
+    axs[1].set_xlabel('Model')
+    axs[1].set_ylabel('Std Percentual Difference [%]')
+    axs[1].axhline(y=0, color='black', linestyle='--')
+    axs[1].set_xticks(range(1, len(std_percentage_diffs_array) + 1))
+    axs[1].set_ylim([0, std_max_value])  # Adjust y-axis for std values
+    axs[1].set_yticks(np.linspace(0, std_max_value, num=5))
+    axs[1].legend()
+
+    # Adjust layout and show plots
+    plt.tight_layout()
+    plt.show()
+
+    # Do the same for the differences
+    # Creating side-by-side plots
+    fig, axs = plt.subplots(1, 2, figsize=(18, 6))
+    
+    # Calculate individual max values for adjusting y-axis range
+    mean_max_abs_value = np.max(np.abs(mean_diffs_array)) * 1.1
+    std_max_value = np.max(std_diffs_array) * 1.1  # std values are only positive
+
+    # Plotting mean differences
+    for idx, param in enumerate(parameters):
+        axs[0].plot(range(1, len(mean_diffs_array)+1), mean_diffs_array[:, idx], label=param, color=colors[idx])
+    axs[0].set_title('Mean Difference per Model')
+    axs[0].set_xlabel('Model')
+    axs[0].set_ylabel('Mean Difference')
+    axs[0].axhline(y=0, color='black', linestyle='--')
+    axs[0].set_xticks(range(1, len(mean_diffs_array) + 1))
+    axs[0].set_ylim([-mean_max_abs_value, mean_max_abs_value])
+    axs[0].set_yticks(np.linspace(-mean_max_abs_value, mean_max_abs_value, num=5))
+    axs[0].legend()
+
+    # Plotting std differences
+    for idx, param in enumerate(parameters):
+        axs[1].plot(range(1, len(std_diffs_array)+1), std_diffs_array[:, idx], label=param, color=colors[idx])
+    axs[1].set_title('Std Difference per Model')
+    axs[1].set_xlabel('Model')
+    axs[1].set_ylabel('Std Difference')
+    axs[1].axhline(y=0, color='black', linestyle='--')
+    axs[1].set_xticks(range(1, len(std_diffs_array) + 1))
+    axs[1].set_ylim([0, std_max_value])  # Adjust y-axis for std values
+    axs[1].set_yticks(np.linspace(0, std_max_value, num=5))
+    axs[1].legend()
+
+    # Adjust layout and show plots
+    plt.tight_layout()
     plt.show()
