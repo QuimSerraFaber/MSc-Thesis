@@ -23,7 +23,7 @@ def training_single_model(config):
     Trains a single model to predict all four parameters.
 
     Parameters:
-    config (dict): A dictionary containing all the settings for training the model.
+    config (dict): A dictionary containing the configuration values for training the model.
     data (dict): The data dictionary containing the noisy TAC signals and ground truth parameters.
     model_class (nn.Module): The neural network model to train.
     loss_function (nn.Module): The loss function to use.
@@ -42,15 +42,14 @@ def training_single_model(config):
     data = config['data']
     model_class = config['model_class']
     loss_function = config['loss_function']
-    batch_size = config.get('batch_size', 1028)  # Example of providing default values
+    batch_size = config.get('batch_size', 1024)  # Example of providing default values
     lr = config.get('lr', 0.001)
     patience = config.get('patience', 5)
     epochs = config.get('epochs', 50)
     progress = config.get('progress', False)
     TAC_loss = config.get('TAC_loss', False)  # Whether to use the TAC loss or traditional loss
 
-
-    # Extract the data from the dictionary
+    # Extract the data from the data dictionary
     inputs = data["noisy_tacs"]
     true_params = data["gt_parameters"]
 
@@ -163,32 +162,10 @@ def training_single_model(config):
     true_params_concat = np.column_stack((true_params_concat, true_ki))
     predicted_params_concat = np.column_stack((predicted_params_concat, predicted_ki))
 
-    # Compute the percentile differences for each parameter
-    diff = true_params_concat - predicted_params_concat
-    epsilon = 1e-8  # Small constant to avoid division by zero
-    percentage_diff = (diff / (true_params_concat + epsilon)) * 100
-
-    # Calculate the mean and standard deviation of the percentage differences
-    mean_percentage_diff = np.mean(percentage_diff, axis=0)
-    std_percentage_diff = np.std(percentage_diff, axis=0)
-    if progress == True:
-        print("Mean percentage difference:", mean_percentage_diff)
-        print("Standard deviation of percentage difference:", std_percentage_diff)
-
-    # Calculate the mean and standard deviation of the differences
-    mean_diff = np.mean(diff, axis=0)
-    std_diff = np.std(diff, axis=0)
-    if progress == True:
-        print("Mean difference:", mean_diff)
-        print("Standard deviation of difference:", std_diff)
-
     # Create dictionary with all the results
     results = {
-        "best_val_loss": best_val_loss,
-        "mean_percentage_diff": mean_percentage_diff,
-        "std_percentage_diff": std_percentage_diff,
-        "mean_diff": mean_diff,
-        "std_diff": std_diff
+        "true_params": true_params_concat,
+        "predicted_params": predicted_params_concat
     }
     
     return model, results
