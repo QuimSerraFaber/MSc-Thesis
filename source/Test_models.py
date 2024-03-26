@@ -41,3 +41,4 @@ for i in range(n_models):
 # Plot the mean and variance of the results
 plot_mean_variance(results_list, config)
 distribution_mean_std(results_list)
+scatter_representation(results_list)

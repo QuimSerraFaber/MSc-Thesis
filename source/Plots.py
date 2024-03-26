@@ -250,3 +250,42 @@ def distribution_mean_std(results_list):
     # Adjust layout and show plots
     plt.tight_layout()
     plt.show()
+
+
+def scatter_representation(results_list):
+    # Initialize arrays to store the true and predicted parameters
+    true_params_array = np.array([results["true_params"] for results in results_list])
+    predicted_params_array = np.array([results["predicted_params"] for results in results_list])
+
+    # Reshaping arrays to aggregate all models together for each parameter
+    true_params_array = true_params_array.reshape(-1, 5)  # Assuming the second dimension is 5 for the number of parameters
+    predicted_params_array = predicted_params_array.reshape(-1, 5)
+
+    # Parameters labels
+    parameters = ['k1', 'k2', 'k3', 'vb', 'ki']
+
+    # Create subplots for each parameter
+    fig, axs = plt.subplots(1, 5, figsize=(25, 5), sharex=False, sharey=False)
+    for i, ax in enumerate(axs):
+        # Density plot for each parameter with the custom colormap
+        hb = ax.hexbin(true_params_array[:, i], predicted_params_array[:, i], gridsize=50, cmap='viridis', mincnt=1)
+        ax.plot(ax.get_xlim(), ax.get_ylim(), ls="--", c=".3")  # Diagonal line
+        
+        ax.set_title(parameters[i])
+        ax.set_xlabel('True Value')
+        if i == 0:
+            ax.set_ylabel('Predicted Value')
+        
+        # Individual tick adjustment
+        true_min, true_max = np.min(true_params_array[:, i]), np.max(true_params_array[:, i])
+        pred_min, pred_max = np.min(predicted_params_array[:, i]), np.max(predicted_params_array[:, i])
+        ax.set_xticks(np.linspace(true_min, true_max, num=5))
+        ax.set_yticks(np.linspace(pred_min, pred_max, num=5))
+    
+    # Add a colorbar to show density scale, placed outside the subplots
+    cb_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])  # Adjust these values as needed to fit your layout
+    cb = fig.colorbar(hb, cax=cb_ax)
+    cb.set_label('count in bin')
+
+    plt.tight_layout(rect=[0, 0, 0.9, 1])  # Adjust layout to make room for colorbar
+    plt.show()
