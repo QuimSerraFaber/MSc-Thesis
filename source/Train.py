@@ -289,7 +289,7 @@ def training_parallel_models(config):
                 if TAC_loss:
                     loss = loss_function(predicted_params, inputs)
                 else:
-                    loss = loss_function(predicted_param, true_params)
+                    loss = loss_function(predicted_params, true_params)
 
                 # Accumulate the loss
                 total_val_loss += loss.item()
@@ -333,7 +333,7 @@ def training_parallel_models(config):
             if TAC_loss:
                 loss = loss_function(predicted_eval_params, inputs)
             else:
-                loss = loss_function(predicted_param, true_params)
+                loss = loss_function(predicted_eval_params, true_params)
 
             # Accumulate the loss
             total_val_loss += loss.item()

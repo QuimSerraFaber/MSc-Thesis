@@ -14,8 +14,8 @@ torch.manual_seed(42)
 
 # Load the data and define the loss function
 #loss = nn.MSELoss()
-#loss = nn.L1Loss()
-loss = TAC_loss
+loss = nn.L1Loss()
+#loss = TAC_loss
 config = { 
     'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
     'model_class': FC_parallel_bounded,
@@ -25,8 +25,8 @@ config = {
     'patience': 5,
     'epochs': 50,
     'progress': True,
-    'TAC_loss': True,
-    'n_models': 5
+    'TAC_loss': False,
+    'n_models': 1
 }
 
 # Initialize lists to collect the arrays
