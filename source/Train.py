@@ -236,41 +236,63 @@ def training_parallel_models(config):
 
     # Training loop
     for epoch in range(epochs):
+        # Set models to training mode
+        for model in models:
+            model.train()
+            
+        # Iterate over training data
         for inputs, true_params in train_dataloader:
+            current_predictions = []
+            
+            # Collect predictions from all models without computing the loss yet
             for i, model in enumerate(models):
-                # Set the model to training mode
-                model.train()
-
-                # Get the optimizer for the current model
-                optimizer = optimizers[i]
-                optimizer.zero_grad()
-
-                # Forward pass
                 predicted_param = model(inputs).squeeze()
+                current_predictions.append(predicted_param.unsqueeze(1))  # Make it a column vector
                 
-                # Compute loss for the specific parameter
-                loss = loss_function(predicted_param, true_params[:, i])
-
-                # Backward pass and optimization
-                loss.backward()
-
-                # Update the weights
+            # Concatenate predictions along dimension 1 to form a [batch_size, 4] tensor
+            all_predictions = torch.cat(current_predictions, dim=1)
+            
+            # Compute the loss
+            if TAC_loss:
+                # Note: Assuming the TAC loss function is designed to take all predictions and inputs
+                loss = loss_function(all_predictions, inputs)
+            else:
+                # This branch may not be used, but included for completeness
+                loss = loss_function(all_predictions, true_params)
+            
+            # Backward pass and optimization
+            for optimizer in optimizers:
+                optimizer.zero_grad()
+            
+            loss.backward()
+            
+            for optimizer in optimizers:
                 optimizer.step()
+
             
         # Validation step
         model.eval()
         total_val_loss = 0
         with torch.no_grad():
             for inputs, true_params in val_dataloader:
+                predicted_params_list = []
+
                 for i, model in enumerate(models):
                     # Forward pass
                     predicted_param = model(inputs).squeeze()
+                    predicted_params_list.append(predicted_param.unsqueeze(1))
+                
+                # Concatenate the predictions along dimension 1
+                predicted_params = torch.cat(predicted_params_list, dim=1)
 
-                    # Compute loss for the specific parameter
-                    loss = loss_function(predicted_param, true_params[:, i])
+                # Compute loss 
+                if TAC_loss:
+                    loss = loss_function(predicted_params, inputs)
+                else:
+                    loss = loss_function(predicted_param, true_params)
 
-                    # Accumulate the loss
-                    total_val_loss += loss.item()
+                # Accumulate the loss
+                total_val_loss += loss.item()
                 
         avg_val_loss = total_val_loss / len(val_dataloader)
         if progress == True:
@@ -289,31 +311,40 @@ def training_parallel_models(config):
             break
     
     # Final evaluation on the validation set
-    # Initialize lists for true parameters and predictions for each model
-    true_params_lists = [[] for _ in range(len(models))]
-    predicted_params_lists = [[] for _ in range(len(models))]
+    # Initialize lists to accumulate the true and predicted parameters
+    accumulated_true_params = []
+    accumulated_predicted_params = []
 
     model.eval()
     total_val_loss = 0
     with torch.no_grad():
         for inputs, true_params in val_dataloader:
+            predicted_eval_params_list = []
+
             for i, model in enumerate(models):
                 # Forward pass
                 predicted_param = model(inputs).squeeze()
+                predicted_eval_params_list.append(predicted_param.unsqueeze(1))
+            
+            # Concatenate the predictions along dimension 1
+            predicted_eval_params = torch.cat(predicted_eval_params_list, dim=1)
 
-                # Compute loss for the specific parameter
-                loss = loss_function(predicted_param, true_params[:, i])
+            # Compute the loss
+            if TAC_loss:
+                loss = loss_function(predicted_eval_params, inputs)
+            else:
+                loss = loss_function(predicted_param, true_params)
 
-                # Accumulate the loss
-                total_val_loss += loss.item()
+            # Accumulate the loss
+            total_val_loss += loss.item()
 
-                # Append the true and predicted parameters to their respective lists
-                true_params_lists[i].append(true_params[:, i].numpy())
-                predicted_params_lists[i].append(predicted_param.numpy())
+            # Accumulate the true and predicted parameters for later analysis
+            accumulated_true_params.append(true_params.numpy())
+            accumulated_predicted_params.append(predicted_eval_params.numpy())
     
-    # Concatenate all batches for each parameter to get the whole validation set predictions
-    true_params_concat = np.concatenate([np.concatenate(lst, axis=0).reshape(-1, 1) for lst in true_params_lists], axis=1)
-    predicted_params_concat = np.concatenate([np.concatenate(lst, axis=0).reshape(-1, 1) for lst in predicted_params_lists], axis=1)
+    # After accumulating results from all batches, concatenate them
+    true_params_concat = np.concatenate(accumulated_true_params, axis=0)
+    predicted_params_concat = np.concatenate(accumulated_predicted_params, axis=0)
 
     # Compute k_i for the true and predicted parameters
     true_ki = ki_macro(true_params_concat[:, 0], true_params_concat[:, 1], true_params_concat[:, 2])
