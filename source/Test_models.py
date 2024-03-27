@@ -26,7 +26,7 @@ config = {
     'epochs': 50,
     'progress': True,
     'TAC_loss': False,
-    'n_models': 5
+    'n_models': 3
 }
 
 # Initialize lists to collect the arrays

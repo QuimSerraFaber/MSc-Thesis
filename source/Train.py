@@ -42,7 +42,7 @@ def training_single_model(config):
     data = config['data']
     model_class = config['model_class']
     loss_function = config['loss_function']
-    batch_size = config.get('batch_size', 1024)  # Example of providing default values
+    batch_size = config.get('batch_size', 1024)
     lr = config.get('lr', 0.001)
     patience = config.get('patience', 5)
     epochs = config.get('epochs', 50)
@@ -171,11 +171,12 @@ def training_single_model(config):
     return model, results
 
 
-def training_parallel_models(data, model_class, loss_function, batch_size=256, lr=0.001, patience=5, epochs=50, progress=False):
+def training_parallel_models(config):
     """
     Trains a group of models parallelly for each parameter.
 
     Parameters:
+    config (dict): The configuration dictionary containing the training parameters.
     data (dict): The data dictionary containing the noisy TAC signals and ground truth parameters.
     model_class (nn.Module): The neural network model to train.
     loss_function (nn.Module): The loss function to use.
@@ -189,6 +190,17 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
     nn.Module: The trained model.
     dict: A dictionary containing the best validation loss, mean percentage difference, and standard deviation of the percentage difference.
     """
+    # Unpack the configuration dictionary
+    data = config['data']
+    model_class = config['model_class']
+    loss_function = config['loss_function']
+    batch_size = config.get('batch_size', 1024)
+    lr = config.get('lr', 0.001)
+    patience = config.get('patience', 5)
+    epochs = config.get('epochs', 50)
+    progress = config.get('progress', False)
+    TAC_loss = config.get('TAC_loss', False)  # Whether to use the TAC loss or traditional loss
+
     # Extract the data from the dictionary
     inputs = data["noisy_tacs"]
     true_params = data["gt_parameters"]
@@ -311,32 +323,10 @@ def training_parallel_models(data, model_class, loss_function, batch_size=256, l
     true_params_concat = np.column_stack((true_params_concat, true_ki))
     predicted_params_concat = np.column_stack((predicted_params_concat, predicted_ki))
 
-    # Compute the percentile differences for each parameter
-    diff = true_params_concat - predicted_params_concat
-    epsilon = 1e-8  # Small constant to avoid division by zero
-    percentage_diff = (diff / (true_params_concat + epsilon)) * 100
-
-    # Calculate the mean and standard deviation of the percentage differences
-    mean_percentage_diff = np.mean(percentage_diff, axis=0)
-    std_percentage_diff = np.std(percentage_diff, axis=0)
-    if progress == True:
-        print("Mean percentage difference:", mean_percentage_diff)
-        print("Standard deviation of percentage difference:", std_percentage_diff)
-
-    # Calculate the mean and standard deviation of the absolute differences
-    mean_diff = np.mean(diff, axis=0)
-    std_diff = np.std(diff, axis=0)
-    if progress == True:
-        print("Mean absolute difference:", mean_diff)
-        print("Standard deviation of absolute difference:", std_diff)
-    
     # Create dictionary with all the results
     results = {
-        "best_val_loss": best_val_loss,
-        "mean_percentage_diff": mean_percentage_diff,
-        "std_percentage_diff": std_percentage_diff,
-        "mean_diff": mean_diff,
-        "std_diff": std_diff
+        "true_params": true_params_concat,
+        "predicted_params": predicted_params_concat
     }
     
     return model, results
