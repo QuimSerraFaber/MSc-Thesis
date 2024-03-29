@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+import torch.optim.lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader, random_split
 import numpy as np
 
@@ -78,6 +79,7 @@ def training_single_model(config):
 
     # Define the optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.75)
 
     # Early stopping
     best_val_loss = np.inf  # Initialize the best validation loss as infinity
@@ -132,6 +134,9 @@ def training_single_model(config):
             if progress == True:
                 print(f"Stopping early at epoch {epoch + 1}")
             break
+
+        # Step the scheduler
+        scheduler.step()
 
     # Final evaluation on the validation set
     true_params_list = []
@@ -229,6 +234,9 @@ def training_parallel_models(config):
 
     # Optimizers (one for each model)
     optimizers = [optim.Adam(model.parameters(), lr=lr) for model in models]
+    
+    # Add scheduler to each optimizer
+    schedulers = [torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.75) for optimizer in optimizers]
 
     # Early stopping
     best_val_loss = np.inf  # Initialize the best validation loss as infinity
@@ -309,6 +317,10 @@ def training_parallel_models(config):
             if progress == True:
                 print(f"Stopping early at epoch {epoch + 1}")
             break
+
+        # Step the scheduler
+        for scheduler in schedulers:
+            scheduler.step()
     
     # Final evaluation on the validation set
     # Initialize lists to accumulate the true and predicted parameters
