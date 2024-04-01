@@ -14,18 +14,18 @@ torch.manual_seed(42)
 
 # Load the data and define the loss function
 #loss = nn.MSELoss()
-loss = nn.L1Loss()
-#loss = TAC_loss
+#loss = nn.L1Loss()
+loss = TAC_loss
 config = { 
-    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
+    'data': np.load("data/Generated_Data/simulation_advanced.npz"),
     'model_class': FC_parallel_bounded,
     'loss_function': loss,
-    'batch_size': 1024,
-    'lr': 0.0001,
+    'batch_size': 1028,
+    'lr': 0.001,
     'patience': 5,
     'epochs': 50,
     'progress': True,
-    'TAC_loss': False,
+    'TAC_loss': True,
     'n_models': 1
 }
 
