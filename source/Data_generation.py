@@ -414,10 +414,10 @@ def adding_noise_advanced(simulated_tac_values, new_rtim, type='Normal'):
         # Generate the noise
         if type == 'Poisson':
             #local_noise = np.random.poisson(0.02 * tac_mean_values[i], size=len(tac_window))
-            local_noise = np.random.poisson(np.sqrt(local_variance), size=len(tac_window))
+            local_noise = np.random.poisson(np.sqrt(abs(local_variance)), size=len(tac_window))
         elif type == 'Normal':
             #local_noise = np.random.normal(0, 0.02 * tac_mean_values[i], size= len(tac_window))
-            local_noise = np.random.normal(0, np.sqrt(local_variance), size=len(tac_window))
+            local_noise = np.random.normal(0, np.sqrt(abs(local_variance)), size=len(tac_window))
         
         noise += local_noise.tolist()
 
@@ -519,7 +519,7 @@ if __name__ == "__main__":
         noisy_tacs = []
         gt_parameters = []
         num_equidistant_points = 2048
-        type = 'Simple'
+        type = 'Advanced'
         COVi = 0.05
 
         for i in range(0, df.index[-1], 1): 
@@ -541,8 +541,8 @@ if __name__ == "__main__":
         gt_parameters = np.array(gt_parameters)
 
         # Save the arrays to a .npz file
-        np.savez('data/Generated_Data/simulation_simple_0.05.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
-        print("Data saved to data/Generated_Data/simulation_simple_0.05.npz")
+        np.savez('data/Generated_Data/simulation_advanced.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
+        print("Data saved to data/Generated_Data/simulation_advanced.npz")
     
     else:
         print("Data generation cancelled.")

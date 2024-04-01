@@ -23,7 +23,7 @@ config = {
     'batch_size': 1028,
     'lr': 0.001,
     'patience': 5,
-    'epochs': 50,
+    'epochs': 25,
     'progress': True,
     'TAC_loss': True,
     'n_models': 1
