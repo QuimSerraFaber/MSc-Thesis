@@ -132,6 +132,9 @@ def TAC_loss(predicted_param, inputs, num_equidistant_points = 2048):
     pchip_pl_tensor = torch.tensor(pchip_pl, dtype=torch.float32)
     pchip_bl_tensor = torch.tensor(pchip_bl, dtype=torch.float32)
     new_rtim_tensor = torch.tensor(new_rtim, dtype=torch.float32)
+
+    # Find new_rtim values that are closest to the original time points
+    closest_indices = [np.argmin(np.abs(new_rtim - t)) for t in rtim_list]
     
     # Calculate the impulse response functions:
     pred_irf = IRF_torch(predicted_param, new_rtim_tensor)
@@ -140,7 +143,7 @@ def TAC_loss(predicted_param, inputs, num_equidistant_points = 2048):
     dt = new_rtim[1] - new_rtim[0]
     pred_c_tissue = c_tissue_torch(pred_irf, pchip_pl_tensor, dt)
 
-    # # prints
+    # # Prints to understand the shapes of the tensors
     # print("pred_c_tissue:", pred_c_tissue.shape)
     # print("pred para:", predicted_param.shape)
     # print("inputs:", inputs.shape)
@@ -152,7 +155,29 @@ def TAC_loss(predicted_param, inputs, num_equidistant_points = 2048):
     # plt.plot(pred_tac[0].detach().numpy())
     # plt.show()
 
-    return nn.MSELoss()(inputs, pred_tac)
+   # Calculate the loss for each time window 
+    tac_loss_list = []
+
+    for i in range(len(rtim_list)):
+        if i == len(rtim_list) - 1:
+            # Last interval
+            interval_tac = pred_tac[:, closest_indices[i]:]
+            interval_inputs = inputs[:, closest_indices[i]:]
+        else:
+            interval_tac = pred_tac[:, closest_indices[i]:closest_indices[i+1]]
+            interval_inputs = inputs[:, closest_indices[i]:closest_indices[i+1]]
+
+        # Calculate the loss for the current interval and append to the list
+        interval_loss = nn.MSELoss()(interval_tac, interval_inputs)
+        tac_loss_list.append(interval_loss)
+
+    # Convert the list of losses into a tensor
+    tac_loss_tensor = torch.stack(tac_loss_list)
+
+    # Calculate the mean loss across all intervals
+    mean_tac_loss = torch.mean(tac_loss_tensor)
+
+    return mean_tac_loss
 
 
 
