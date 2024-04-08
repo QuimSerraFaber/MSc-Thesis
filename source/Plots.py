@@ -253,39 +253,65 @@ def distribution_mean_std(results_list):
 
 
 def scatter_representation(results_list):
+    """
+    Create a scatter plot to visualize the true and predicted parameters for each model.
+
+    Parameters:
+    results_list (list): A list of dictionaries containing the true and predicted parameters for each model.
+    """
     # Initialize arrays to store the true and predicted parameters
     true_params_array = np.array([results["true_params"] for results in results_list])
     predicted_params_array = np.array([results["predicted_params"] for results in results_list])
 
     # Reshaping arrays to aggregate all models together for each parameter
-    true_params_array = true_params_array.reshape(-1, 5)  # Assuming the second dimension is 5 for the number of parameters
+    true_params_array = true_params_array.reshape(-1, 5)
     predicted_params_array = predicted_params_array.reshape(-1, 5)
 
     # Parameters labels
     parameters = ['k1', 'k2', 'k3', 'vb', 'ki']
 
-    # Create subplots for each parameter
-    fig, axs = plt.subplots(1, 5, figsize=(25, 5), sharex=False, sharey=False)
-    for i, ax in enumerate(axs):
+    # Create subplots for each parameter in a 2x3 grid, adjusting the figsize if needed
+    fig, axs = plt.subplots(2, 3, figsize=(18, 10), sharex=False, sharey=False)
+
+    # Flatten axs to make it easier to iterate over
+    axs = axs.flatten()
+
+    # Loop through the first 5 plots to create hexbin plots
+    for i in range(5):
+        ax = axs[i]
         # Density plot for each parameter with the custom colormap
         hb = ax.hexbin(true_params_array[:, i], predicted_params_array[:, i], gridsize=50, cmap='viridis', mincnt=1)
-        ax.plot(ax.get_xlim(), ax.get_ylim(), ls="--", c=".3")  # Diagonal line
-        
+
         ax.set_title(parameters[i])
         ax.set_xlabel('True Value')
-        if i == 0:
+        if i % 3 == 0:  # Only set ylabel for the first plot of each row
             ax.set_ylabel('Predicted Value')
-        
-        # Individual tick adjustment
-        true_min, true_max = np.min(true_params_array[:, i]), np.max(true_params_array[:, i])
-        pred_min, pred_max = np.min(predicted_params_array[:, i]), np.max(predicted_params_array[:, i])
-        ax.set_xticks(np.linspace(true_min, true_max, num=5))
-        ax.set_yticks(np.linspace(pred_min, pred_max, num=5))
-    
-    # Add a colorbar to show density scale, placed outside the subplots
-    cb_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])  # Adjust these values as needed to fit your layout
+
+        # Setting the same limits for x and y axes with margin
+        combined_min = min(np.min(true_params_array[:, i]), np.min(predicted_params_array[:, i]))
+        combined_max = max(np.max(true_params_array[:, i]), np.max(predicted_params_array[:, i]))
+        range_val = combined_max - combined_min
+        margin = range_val * 0.05
+        final_min, final_max = combined_min - margin, combined_max + margin
+        ax.set_xlim(combined_min - margin, combined_max + margin)
+        ax.set_ylim(combined_min - margin, combined_max + margin)
+
+        # Draw the diagonal line after setting the final axis limits
+        ax.plot([final_min, final_max], [final_min, final_max], ls="--", c=".3")
+
+        ticks = np.linspace(combined_min - margin, combined_max + margin, num=5)
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+
+    # Remove the last (unused) subplot to maintain the 3-2 layout
+    fig.delaxes(axs[-1])
+
+    # Adjusting the layout to make room for colorbar
+    plt.tight_layout(rect=[0, 0, 0.9, 1])
+
+    # Create an axis for the colorbar. Adjust the position to not overlap plots.
+    cb_ax = fig.add_axes([0.92, 0.1, 0.02, 0.8])
     cb = fig.colorbar(hb, cax=cb_ax)
     cb.set_label('count in bin')
 
-    plt.tight_layout(rect=[0, 0, 0.9, 1])  # Adjust layout to make room for colorbar
     plt.show()
