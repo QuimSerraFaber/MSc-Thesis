@@ -130,7 +130,7 @@ def training_single_model(config):
         else:
             patience_counter += 1  # Increase patience counter
         
-        if patience_counter >= patience:  # Check if patience counter has reached the patience limit
+        if patience_counter >= patience and epoch > 10:  # Check if patience counter has reached the patience limit
             if progress == True:
                 print(f"Stopping early at epoch {epoch + 1}")
             break
@@ -313,7 +313,7 @@ def training_parallel_models(config):
         else:
             patience_counter += 1  # Increase patience counter
         
-        if patience_counter >= patience:  # Check if patience counter has reached the patience limit
+        if patience_counter >= patience and epoch > 10:  # Check if patience counter has reached the patience limit
             if progress == True:
                 print(f"Stopping early at epoch {epoch + 1}")
             break
