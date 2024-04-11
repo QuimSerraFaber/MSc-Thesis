@@ -334,6 +334,10 @@ def scatter_representation(results_list):
     # Adjusting the layout to make room for colorbar
     plt.tight_layout(rect=[0, 0, 0.9, 1])
 
+    # Add titles for the entire figure and the best model number
+    fig.suptitle(f'Scatter Representation of True vs Predicted Parameters: model {best_model_index + 1}', fontsize=16)
+    fig.subplots_adjust(top=0.9)
+
     # Create an axis for the colorbar. Adjust the position to not overlap plots.
     cb_ax = fig.add_axes([0.92, 0.1, 0.02, 0.8])
     cb = fig.colorbar(hb, cax=cb_ax)
