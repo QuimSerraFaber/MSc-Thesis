@@ -263,18 +263,34 @@ def distribution_mean_std(results_list):
 
 def scatter_representation(results_list):
     """
-    Create a scatter plot to visualize the true and predicted parameters for each model.
+    Create a scatter plot to visualize the true and predicted parameters of the best performing model.
 
     Parameters:
     results_list (list): A list of dictionaries containing the true and predicted parameters for each model.
     """
-    # Initialize arrays to store the true and predicted parameters
-    true_params_array = np.array([results["true_params"] for results in results_list])
-    predicted_params_array = np.array([results["predicted_params"] for results in results_list])
+    # Initialize list to store the sum of mean percentage differences for each model
+    sum_mean_percentage_diffs = []
 
-    # Reshaping arrays to aggregate all models together for each parameter
-    true_params_array = true_params_array.reshape(-1, 5)
-    predicted_params_array = predicted_params_array.reshape(-1, 5)
+    # Iterate over results list to calculate mean percentage differences
+    for results in results_list:
+        true_params = np.array(results["true_params"])
+        predicted_params = np.array(results["predicted_params"])
+        
+        # Compute the percentage differences for each parameter
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        percentage_diff = (true_params - predicted_params) / (true_params + epsilon) * 100
+        
+        # Calculate the mean percentage difference across all parameters for this model and sum them
+        mean_percentage_diff = np.mean(np.abs(percentage_diff), axis=1)
+        sum_mean_percentage_diffs.append(np.sum(mean_percentage_diff))
+    
+    # Find the index of the model with the lowest sum of mean percentage differences
+    best_model_index = np.argmin(sum_mean_percentage_diffs)
+
+    # Proceed to plot the true and predicted parameters for the best model
+    best_model_results = results_list[best_model_index]
+    true_params = np.array(best_model_results["true_params"])
+    predicted_params = np.array(best_model_results["predicted_params"])
 
     # Parameters labels
     parameters = ['k1', 'k2', 'k3', 'vb', 'ki']
@@ -289,7 +305,7 @@ def scatter_representation(results_list):
     for i in range(5):
         ax = axs[i]
         # Density plot for each parameter with the custom colormap
-        hb = ax.hexbin(true_params_array[:, i], predicted_params_array[:, i], gridsize=50, cmap='viridis', mincnt=1)
+        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=50, cmap='viridis', mincnt=1)
 
         ax.set_title(parameters[i])
         ax.set_xlabel('True Value')
@@ -297,8 +313,8 @@ def scatter_representation(results_list):
             ax.set_ylabel('Predicted Value')
 
         # Setting the same limits for x and y axes with margin
-        combined_min = min(np.min(true_params_array[:, i]), np.min(predicted_params_array[:, i]))
-        combined_max = max(np.max(true_params_array[:, i]), np.max(predicted_params_array[:, i]))
+        combined_min = min(np.min(true_params[:, i]), np.min(predicted_params[:, i]))
+        combined_max = max(np.max(true_params[:, i]), np.max(predicted_params[:, i]))
         range_val = combined_max - combined_min
         margin = range_val * 0.05
         final_min, final_max = combined_min - margin, combined_max + margin
