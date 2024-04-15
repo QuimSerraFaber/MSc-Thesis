@@ -305,7 +305,7 @@ def scatter_representation(results_list):
     for i in range(5):
         ax = axs[i]
         # Density plot for each parameter with the custom colormap
-        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=50, cmap='viridis', mincnt=1)
+        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=50, cmap='viridis_r', mincnt=1)
 
         ax.set_title(parameters[i])
         ax.set_xlabel('True Value')
