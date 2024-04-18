@@ -16,6 +16,12 @@ def plot_mean_variance(results_list, config):
     loss = config['loss_function']
     n_models = config['n_models']
 
+    # Check the type of model_class to ensure correct usage in the title
+    if isinstance(model_class, type):
+        model_class_name = model_class.__name__
+    else:
+        model_class_name = model_class
+
     # Initialize lists to store the mean and standard deviation of the percentage differences and differences
     mean_percentage_diffs = []
     std_percentage_diffs = []
@@ -84,7 +90,7 @@ def plot_mean_variance(results_list, config):
     plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
     # Customizing the plot
-    plt.title(f'Percentual difference in predictions: {model_class.__name__}, {loss} & {n_models} models')
+    plt.title(f'Percentual difference in predictions: {model_class_name}, {loss} & {n_models} models')
     plt.xlabel('Parameter')
     plt.ylabel('Average Percentual Difference [%]')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -115,7 +121,7 @@ def plot_mean_variance(results_list, config):
     plt.xlim(-0.25, len(parameters)-0.1)  # Set dynamic limits based on the number of parameters
 
     # Customizing the plot
-    plt.title(f'Difference in predictions: {model_class.__name__}, {loss} & {n_models} models')
+    plt.title(f'Difference in predictions: {model_class_name}, {loss} & {n_models} models')
     plt.xlabel('Parameter')
     plt.ylabel('Average Absolute Difference')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
