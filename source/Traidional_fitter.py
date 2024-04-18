@@ -62,7 +62,7 @@ def save_results(true_params, fitted_params):
 # Main execution
 if __name__ == "__main__":
     config = { 
-    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
+    'data': np.load("data/Generated_Data/simulation_simple_0.0.npz"),
     'model_class': "Tradional fitter",
     'loss_function': "Nonlinear Least Squares Loss",
     'n_models': "",
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     new_rtim, _, _, pchip_pl = equidistant_interpolation(rtim_list, pl_list, num_equidistant_points)
     _, _, _, pchip_bl = equidistant_interpolation(rtim_list, bl_list, num_equidistant_points)
     parameter_bounds = ([0.13, 0.014, 0.025, 0.05], [0.41, 0.164, 0.725, 0.4])
+    #parameter_bounds = ([0.01, 0.01, 0.01, 0.01], [1.0, 0.5, 2.0, 0.7]) # Recommended by Maqsood
     initial_guesses = [0.27, 0.089, 0.375, 0.225] # Average of each parameter value's range
     dt = new_rtim[1] - new_rtim[0]
     
