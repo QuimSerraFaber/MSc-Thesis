@@ -310,8 +310,14 @@ def scatter_representation(results_list):
     # Loop through the first 5 plots to create hexbin plots
     for i in range(5):
         ax = axs[i]
+        # Adjust gridsize for the last plot
+        if i == 4:  # Last plot
+            gridsize = 1000  # Larger gridsize for more detail
+        else:
+            gridsize = 50  # Standard gridsize for other plots
+
         # Density plot for each parameter with the custom colormap
-        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=150, cmap='viridis_r', mincnt=1)
+        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=gridsize, cmap='viridis_r', mincnt=1)
 
         ax.set_title(parameters[i])
         ax.set_xlabel('True Value')
@@ -320,7 +326,7 @@ def scatter_representation(results_list):
 
         # Set axis limits based on quantiles to avoid outliers
         quantile_min, quantile_max = np.quantile(np.hstack([true_params[:, i], predicted_params[:, i]]), [0.01, 0.99])
-        margin = (quantile_max - quantile_min) * 0.1
+        margin = (quantile_max - quantile_min) * 0.15
         final_min, final_max = quantile_min - margin, quantile_max + margin
         ax.set_xlim(final_min, final_max)
         ax.set_ylim(final_min, final_max)
