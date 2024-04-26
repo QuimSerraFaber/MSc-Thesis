@@ -311,26 +311,24 @@ def scatter_representation(results_list):
     for i in range(5):
         ax = axs[i]
         # Density plot for each parameter with the custom colormap
-        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=50, cmap='viridis_r', mincnt=1)
+        hb = ax.hexbin(true_params[:, i], predicted_params[:, i], gridsize=150, cmap='viridis_r', mincnt=1)
 
         ax.set_title(parameters[i])
         ax.set_xlabel('True Value')
         if i % 3 == 0:  # Only set ylabel for the first plot of each row
             ax.set_ylabel('Predicted Value')
 
-        # Setting the same limits for x and y axes with margin
-        combined_min = min(np.min(true_params[:, i]), np.min(predicted_params[:, i]))
-        combined_max = max(np.max(true_params[:, i]), np.max(predicted_params[:, i]))
-        range_val = combined_max - combined_min
-        margin = range_val * 0.05
-        final_min, final_max = combined_min - margin, combined_max + margin
-        ax.set_xlim(combined_min - margin, combined_max + margin)
-        ax.set_ylim(combined_min - margin, combined_max + margin)
+        # Set axis limits based on quantiles to avoid outliers
+        quantile_min, quantile_max = np.quantile(np.hstack([true_params[:, i], predicted_params[:, i]]), [0.01, 0.99])
+        margin = (quantile_max - quantile_min) * 0.1
+        final_min, final_max = quantile_min - margin, quantile_max + margin
+        ax.set_xlim(final_min, final_max)
+        ax.set_ylim(final_min, final_max)
 
         # Draw the diagonal line after setting the final axis limits
         ax.plot([final_min, final_max], [final_min, final_max], ls="--", c=".3")
 
-        ticks = np.linspace(combined_min - margin, combined_max + margin, num=5)
+        ticks = np.linspace(final_min, final_max, num=5)
         ax.set_xticks(ticks)
         ax.set_yticks(ticks)
 
