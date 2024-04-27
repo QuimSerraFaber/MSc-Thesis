@@ -5,6 +5,7 @@ from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
 from models.FC_nn_single_bounded import FC_single_bounded
 from models.FC_nn_parallel import *
+from models.LSTM_single_bounded import LSTM_single_bounded
 from Losses import TAC_loss
 from Plots import *
 
@@ -14,19 +15,19 @@ torch.manual_seed(42)
 
 # Load the data and define the loss function
 #loss = nn.MSELoss()
-#loss = nn.L1Loss()
-loss = TAC_loss
+loss = nn.L1Loss()
+#loss = TAC_loss
 config = { 
-    'data': np.load("data/Generated_Data/simulation_advanced.npz"),
-    'model_class': FC_parallel_bounded,
+    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
+    'model_class': FC_single,
     'loss_function': loss,
-    'batch_size': 1028,
+    'batch_size': 1024,
     'lr': 0.001,
-    'patience': 5,
-    'epochs': 25,
+    'patience': 15,
+    'epochs': 250,
     'progress': True,
-    'TAC_loss': True,
-    'n_models': 1
+    'TAC_loss': False,
+    'n_models': 5
 }
 
 # Initialize lists to collect the arrays
@@ -34,7 +35,7 @@ results_list = []
 n_models = config['n_models']
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_parallel_models(config)
+    model, results = training_single_model(config)
     # Append the results
     results_list.append(results)
 
