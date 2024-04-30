@@ -478,12 +478,12 @@ def generate_tac(data_row, num_points, type='Simple', COVi=None):
     elif type == 'Advanced': # Use the advanced noise addition method
         noisy_tac, _ = adding_noise_advanced(simulated_tac_values, new_rtim, 'Normal')
 
-    return new_rtim, simulated_tac_values, noisy_tac
+    return new_rtim, simulated_tac_values, noisy_tac, IRF_values
 
 if __name__ == "__main__":
     # Generate the TAC signal for a given row using the simple noise addition method
     data_row = DataLoader(466540, df)
-    new_rtim, simulated_tac_values, noisy_tac = generate_tac(data_row, num_equidistant_points)
+    new_rtim, simulated_tac_values, noisy_tac, _ = generate_tac(data_row, num_equidistant_points)
 
     # Plot the simulated and noisy TAC signals
     plt.figure(figsize=(10, 6))
@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
     # Generate the TAC signal for a given row using the advanced noise addition method
     data_row = DataLoader(466540, df)
-    new_rtim, simulated_tac_values, noisy_tac = generate_tac(data_row, num_equidistant_points, type='Advanced')
+    new_rtim, simulated_tac_values, noisy_tac, _ = generate_tac(data_row, num_equidistant_points, type='Advanced')
 
     # Plot the simulated and noisy TAC signals
     plt.figure(figsize=(10, 6))
@@ -522,17 +522,17 @@ if __name__ == "__main__":
         type = 'Advanced'
         COVi = 0.05
 
-        for i in range(0, df.index[-1], 1): 
+        for i in range(0, df.index[-1], 25): 
             data_row = DataLoader(i, df)
-            _, _, noisy_tac = generate_tac(data_row, num_equidistant_points, type, COVi)
+            _, _, noisy_tac, IRF_values = generate_tac(data_row, num_equidistant_points, type, COVi)
 
             # Append the noisy TAC and ground truth parameters to the lists
-            noisy_tacs.append(noisy_tac)
+            noisy_tacs.append(IRF_values)
             data_row['gt_parameters_list'].extend([0])  # Append an extra zero for k4
             gt_parameters.append(data_row['gt_parameters_list'])
 
             # Print the progress
-            if i % 10000 == 0 and i != 0:
+            if i % 1000 == 0 and i != 0:
                 print(i)
                 print(data_row['gt_parameters_list'])
             
@@ -541,7 +541,7 @@ if __name__ == "__main__":
         gt_parameters = np.array(gt_parameters)
 
         # Save the arrays to a .npz file
-        np.savez('data/Generated_Data/simulation_advanced.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
+        np.savez('data/Generated_Data/IRF.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
         print("Data saved to data/Generated_Data/simulation_advanced.npz")
     
     else:
