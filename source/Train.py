@@ -388,5 +388,5 @@ def training_parallel_models(config):
         "predicted_params": predicted_params_concat
     }
     
-    return model, results
+    return models, results
 
