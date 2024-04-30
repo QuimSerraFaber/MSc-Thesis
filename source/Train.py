@@ -49,10 +49,17 @@ def training_single_model(config):
     epochs = config.get('epochs', 50)
     progress = config.get('progress', False)
     TAC_loss = config.get('TAC_loss', False)  # Whether to use the TAC loss or traditional loss
+    fast = config.get('fast', True)  # Whether to use only the 22 closest indices to the measuring points
 
     # Extract the data from the data dictionary
     inputs = data["noisy_tacs"]
     true_params = data["gt_parameters"]
+
+    # Use only the 22 closest indices to the measuring points
+    if fast == True:
+        closest_indices = [0, 4, 6, 8, 10, 14, 18, 31, 54, 77, 100, 140, 196, 282, 396, 567, 794, 1022, 1250, 1478, 1705, 1933]
+        inputs = inputs[:, closest_indices]
+        print(inputs.shape)
 
     # Convert the arrays to PyTorch tensors
     inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -79,7 +86,7 @@ def training_single_model(config):
 
     # Define the optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.75)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.8)
 
     # Early stopping
     best_val_loss = np.inf  # Initialize the best validation loss as infinity
@@ -136,7 +143,8 @@ def training_single_model(config):
             break
 
         # Step the scheduler
-        scheduler.step()
+        if epoch < 101:
+            scheduler.step()
 
     # Final evaluation on the validation set
     true_params_list = []
@@ -205,10 +213,17 @@ def training_parallel_models(config):
     epochs = config.get('epochs', 50)
     progress = config.get('progress', False)
     TAC_loss = config.get('TAC_loss', False)  # Whether to use the TAC loss or traditional loss
+    fast = config.get('fast', True)  # Whether to use only the 22 closest indices to the measuring points
 
     # Extract the data from the dictionary
     inputs = data["noisy_tacs"]
     true_params = data["gt_parameters"]
+
+    # Use only the 22 closest indices to the measuring points
+    if fast == True:
+        closest_indices = [0, 4, 6, 8, 10, 14, 18, 31, 54, 77, 100, 140, 196, 282, 396, 567, 794, 1022, 1250, 1478, 1705, 1933]
+        inputs = inputs[:, closest_indices]
+        print(inputs.shape)
 
     # Convert the arrays to PyTorch tensors
     inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -319,8 +334,9 @@ def training_parallel_models(config):
             break
 
         # Step the scheduler
-        for scheduler in schedulers:
-            scheduler.step()
+        if epoch < 101:
+            for scheduler in schedulers:
+                scheduler.step()
     
     # Final evaluation on the validation set
     # Initialize lists to accumulate the true and predicted parameters
