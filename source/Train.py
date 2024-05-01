@@ -59,7 +59,9 @@ def training_single_model(config):
     if fast == True:
         closest_indices = [0, 4, 6, 8, 10, 14, 18, 31, 54, 77, 100, 140, 196, 282, 396, 567, 794, 1022, 1250, 1478, 1705, 1933]
         inputs = inputs[:, closest_indices]
-        print(inputs.shape)
+        num_equidistant_points = len(closest_indices)
+    else:
+        num_equidistant_points = 2048
 
     # Convert the arrays to PyTorch tensors
     inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -104,7 +106,7 @@ def training_single_model(config):
 
             # Compute the loss
             if TAC_loss: 
-                loss = loss_function(predicted_params, inputs) 
+                loss = loss_function(predicted_params, inputs, num_equidistant_points) 
             else:
                 loss = loss_function(predicted_params, true_params)
 
@@ -121,7 +123,7 @@ def training_single_model(config):
             for inputs, true_params in val_dataloader:
                 predicted_params = model(inputs)
                 if TAC_loss:
-                    loss = loss_function(predicted_params, inputs)
+                    loss = loss_function(predicted_params, inputs, num_equidistant_points)
                 else:
                     loss = loss_function(predicted_params, true_params)
                 total_val_loss += loss.item()
@@ -156,7 +158,7 @@ def training_single_model(config):
         for inputs, true_params in val_dataloader:
             predicted_params = model(inputs)
             if TAC_loss:
-                loss = loss_function(predicted_params, inputs)
+                loss = loss_function(predicted_params, inputs, num_equidistant_points)
             else:
                 loss = loss_function(predicted_params, true_params)
             total_val_loss += loss.item()
@@ -223,7 +225,9 @@ def training_parallel_models(config):
     if fast == True:
         closest_indices = [0, 4, 6, 8, 10, 14, 18, 31, 54, 77, 100, 140, 196, 282, 396, 567, 794, 1022, 1250, 1478, 1705, 1933]
         inputs = inputs[:, closest_indices]
-        print(inputs.shape)
+        num_equidistant_points = len(closest_indices)
+    else:
+        num_equidistant_points = 2048
 
     # Convert the arrays to PyTorch tensors
     inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
@@ -278,7 +282,7 @@ def training_parallel_models(config):
             # Compute the loss
             if TAC_loss:
                 # Note: Assuming the TAC loss function is designed to take all predictions and inputs
-                loss = loss_function(all_predictions, inputs)
+                loss = loss_function(all_predictions, inputs, num_equidistant_points)
             else:
                 # This branch may not be used, but included for completeness
                 loss = loss_function(all_predictions, true_params)
@@ -310,7 +314,7 @@ def training_parallel_models(config):
 
                 # Compute loss 
                 if TAC_loss:
-                    loss = loss_function(predicted_params, inputs)
+                    loss = loss_function(predicted_params, inputs, num_equidistant_points)
                 else:
                     loss = loss_function(predicted_params, true_params)
 
@@ -359,7 +363,7 @@ def training_parallel_models(config):
 
             # Compute the loss
             if TAC_loss:
-                loss = loss_function(predicted_eval_params, inputs)
+                loss = loss_function(predicted_eval_params, inputs, num_equidistant_points)
             else:
                 loss = loss_function(predicted_eval_params, true_params)
 
