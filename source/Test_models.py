@@ -23,12 +23,12 @@ config = {
     'loss_function': loss,
     'batch_size': 1024,
     'lr': 0.001,
-    'patience': 10,
-    'epochs': 150,
+    'patience': 30,
+    'epochs': 250,
     'progress': True,
     'TAC_loss': True,
-    'n_models': 1,
-    'fast': False
+    'n_models': 5,
+    'fast': True
 }
 
 # Initialize lists to collect the arrays
