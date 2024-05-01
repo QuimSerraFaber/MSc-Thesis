@@ -32,9 +32,10 @@ def IRF_torch(gt_parameters_tensor, equidistant_rtim_tensor):
     k4 = torch.zeros_like(k1)  # Ensuring k4 is the same shape and device as k1
 
     # Calculate alphas for the entire batch
-    sqrt_term = torch.sqrt(torch.clamp((k2 + k3 + k4)**2 - 4*k2*k4, min=0))
-    alpha1 = (k2 + k3 + k4) - sqrt_term / 2.0
-    alpha2 = (k2 + k3 + k4) + sqrt_term / 2.0
+    alpha1 = (k2 + k3 + k4) - torch.sqrt((k2 + k3 + k4)**2 - 4*k2*k4)
+    alpha1 /= 2
+    alpha2 = (k2 + k3 + k4) + torch.sqrt((k2 + k3 + k4)**2 - 4*k2*k4)
+    alpha2 /= 2
 
     # Calculate IRF for each time point and each batch
     epsilon = 1e-8
