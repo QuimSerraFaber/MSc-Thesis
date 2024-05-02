@@ -23,11 +23,11 @@ config = {
     'loss_function': loss,
     'batch_size': 1024,
     'lr': 0.001,
-    'patience': 30,
-    'epochs': 250,
+    'patience': 300,
+    'epochs': 1550,
     'progress': True,
     'TAC_loss': True,
-    'n_models': 5,
+    'n_models': 1,
     'fast': True
 }
 
