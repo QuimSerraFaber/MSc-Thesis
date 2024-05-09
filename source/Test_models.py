@@ -5,7 +5,7 @@ from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
 from models.FC_nn_single_bounded import FC_single_bounded
 from models.FC_nn_parallel import *
-from models.LSTM_single_bounded import LSTM_single_bounded
+from source.models.LSTM import LSTM_single_bounded
 from Losses import TAC_loss
 from Plots import *
 
