@@ -255,7 +255,7 @@ def training_parallel_models(config):
     optimizers = [optim.Adam(model.parameters(), lr=lr) for model in models]
     
     # Add scheduler to each optimizer
-    schedulers = [torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.75) for optimizer in optimizers]
+    schedulers = [torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.8) for optimizer in optimizers]
 
     # Early stopping
     best_val_loss = np.inf  # Initialize the best validation loss as infinity
