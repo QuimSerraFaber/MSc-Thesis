@@ -85,7 +85,7 @@ if __name__ == "__main__":
     dt = new_rtim[1] - new_rtim[0]
     
     # Fit the signals
-    inputs, true_params = config['data']["noisy_tacs"], config['data']["gt_parameters"][:, :-1]
+    inputs, true_params = config['data']["noisy_tacs"][:], config['data']["gt_parameters"][:, :-1]
     fitted_params = fit_signals(inputs, new_rtim, parameter_bounds)
     
     # Add Ki column to the fitted and true parameters
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("Results processing complete.")
 
     # Plotting
-    #plot_mean_variance(results, config)
+    plot_mean_variance(results, config)
     distribution_mean_std(results)
     scatter_representation(results)
 
@@ -106,8 +106,8 @@ if __name__ == "__main__":
 
     if save:
         # Save the results to a .npz file
-        np.savez('data/Fitted_Data/simulation_simple_0.01.npz', results=results)
-        print("Data saved to data/Fitted_Data/simulation_simple_0.01.npz")
+        np.savez('data/Fitted_Data/simulation_simple_0.0.npz', results=results)
+        print("Data saved to data/Fitted_Data/simulation_simple_0.0.npz")
     
     else:
         print("Data saving cancelled.")

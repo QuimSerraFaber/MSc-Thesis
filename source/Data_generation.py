@@ -460,7 +460,7 @@ def generate_tac(data_row, num_points, type='Simple', COVi=None):
     """
     # Interpolate the required signals using PCHIP
     new_rtim, _, _, pchip_pl = equidistant_interpolation(data_row['rtim_list'], data_row['pl_list'], num_points)
-    _, _, _, pchip_bl = equidistant_interpolation(data_row['rtim_list'], data_row['tac_list'], num_points)
+    _, _, _, pchip_bl = equidistant_interpolation(data_row['rtim_list'], data_row['bl_list'], num_points)
 
     # Calculate the IRF values
     IRF_values = IRF(data_row['gt_parameters_list'], new_rtim)
@@ -519,15 +519,15 @@ if __name__ == "__main__":
         noisy_tacs = []
         gt_parameters = []
         num_equidistant_points = 2048
-        type = 'Advanced'
-        COVi = 0.05
+        type = 'Simple'
+        COVi = 0.0
 
         for i in range(0, df.index[-1], 25): 
             data_row = DataLoader(i, df)
-            _, _, noisy_tac, IRF_values = generate_tac(data_row, num_equidistant_points, type, COVi)
+            _, simulated_tac_values, noisy_tac, _ = generate_tac(data_row, num_equidistant_points, type, COVi)
 
             # Append the noisy TAC and ground truth parameters to the lists
-            noisy_tacs.append(IRF_values)
+            noisy_tacs.append(noisy_tac)
             data_row['gt_parameters_list'].extend([0])  # Append an extra zero for k4
             gt_parameters.append(data_row['gt_parameters_list'])
 
@@ -541,8 +541,8 @@ if __name__ == "__main__":
         gt_parameters = np.array(gt_parameters)
 
         # Save the arrays to a .npz file
-        np.savez('data/Generated_Data/IRF.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
-        print("Data saved to data/Generated_Data/simulation_advanced.npz")
+        np.savez('data/Generated_Data/simulation_simple_0.0.npz', noisy_tacs=noisy_tacs, gt_parameters=gt_parameters)
+        print("Data saved to data/Generated_Data/simulation_simple_0.0.npz")
     
     else:
         print("Data generation cancelled.")
