@@ -5,7 +5,7 @@ from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
 from models.FC_nn_single_bounded import FC_single_bounded
 from models.FC_nn_parallel import *
-from source.models.LSTM import LSTM_single_bounded
+from models.LSTM import LSTM_single_bounded
 from Losses import TAC_loss
 from Plots import *
 
@@ -22,9 +22,9 @@ config = {
     'model_class': FC_parallel_bounded,
     'loss_function': loss,
     'batch_size': 1024,
-    'lr': 0.001,
+    'lr': 0.0001,
     'patience': 10,
-    'epochs': 150,
+    'epochs': 50,
     'progress': True,
     'TAC_loss': True,
     'n_models': 1,
