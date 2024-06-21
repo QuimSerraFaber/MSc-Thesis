@@ -483,16 +483,17 @@ def generate_tac(data_row, num_points, type='Simple', COVi=None):
 if __name__ == "__main__":
     # Generate the TAC signal for a given row using the simple noise addition method
     data_row = DataLoader(466540, df)
-    new_rtim, simulated_tac_values, noisy_tac, _ = generate_tac(data_row, num_equidistant_points)
+    new_rtim, simulated_tac_values, noisy_tac, _ = generate_tac(data_row, num_equidistant_points, type='Simple', COVi=0.05)
 
     # Plot the simulated and noisy TAC signals
     plt.figure(figsize=(10, 6))
     plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue', linewidth=2)
     plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red', linestyle='--', linewidth=1, alpha=0.7)
     plt.xlabel('Time')
-    plt.ylabel('TAC')
+    plt.ylabel('TAC [kBq/cc]')
     plt.title('Simulated vs Simple noisy TAC')
     plt.legend()
+    plt.grid(True)
     plt.show()
 
     # Generate the TAC signal for a given row using the advanced noise addition method
@@ -504,9 +505,10 @@ if __name__ == "__main__":
     plt.plot(new_rtim, simulated_tac_values, label='Simulated TAC', color='blue', linewidth=2)
     plt.plot(new_rtim, noisy_tac, label='Noisy TAC', color='red', linestyle='--', linewidth=1, alpha=0.7)
     plt.xlabel('Time')
-    plt.ylabel('TAC')
+    plt.ylabel('TAC [kBq/cc]')
     plt.title('Simulated vs Advanced noisy TAC')
     plt.legend()
+    plt.grid(True)
     plt.show()
 
 

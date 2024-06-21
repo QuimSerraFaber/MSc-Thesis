@@ -62,7 +62,7 @@ def save_results(true_params, fitted_params):
 # Main execution
 if __name__ == "__main__":
     config = { 
-    'data': np.load("data/Generated_Data/simulation_simple_0.0.npz"),
+    'data': np.load("data/Generated_Data/simulation_advanced.npz"),
     'model_class': "Tradional fitter",
     'loss_function': "Nonlinear Least Squares Loss",
     'n_models': "",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     if save:
         # Save the results to a .npz file
-        np.savez('data/Fitted_Data/simulation_simple_0.0.npz', results=results)
+        np.savez('data/Fitted_Data/simulation_advanced.npz', results=results)
         print("Data saved to data/Fitted_Data/simulation_simple_0.0.npz")
     
     else:
