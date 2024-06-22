@@ -18,8 +18,8 @@ class FC_single_bounded(nn.Module):
         x = torch.sigmoid(self.fc3(x))  # Apply sigmoid to all outputs
         
         # Apply different transformations for each output
-        a = torch.tensor([0.28, 0.15, 0.7, 0.35])  # Scaling factors
-        b = torch.tensor([0.13, 0.014, 0.025, 0.05])  # Shifts
-        x = a * x + b
+        a = torch.tensor([7/15, 0.25, 7/6, 7/12])  # Scaling factors
+        b = torch.tensor([11/300, -9/250, -5/24, -1/15])  # Shifts
+        x = a * x + b # Apply scaling and shifting with a margin b
 
         return x

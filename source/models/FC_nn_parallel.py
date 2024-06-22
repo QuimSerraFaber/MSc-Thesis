@@ -36,6 +36,6 @@ class FC_parallel_bounded(nn.Module):
         x = self.dropout2(torch.relu(self.bn2(self.fc2(x))))
         x = torch.sigmoid(self.fc3(x))
 
-        x = 0.711 * x + 0.014  # Scale the output to [0.014, 0.725]
+        x = 7/6 * x   # Scale the output to [0, 7/6]
 
         return x

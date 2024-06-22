@@ -27,11 +27,6 @@ class LSTM_single(nn.Module):
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])  # We take the last output only
 
-        # # Apply different transformations for each output
-        # a = torch.tensor([0.28, 0.15, 0.7, 0.35])  # Scaling factors
-        # b = torch.tensor([0.13, 0.014, 0.025, 0.05])  # Shifts
-        # out = a * out + b # Apply scaling and shifting
-
         return out
     
 
@@ -62,9 +57,9 @@ class LSTM_single_bounded(nn.Module):
         out = self.fc(out[:, -1, :])  # We take the last output only
 
         # Apply different transformations for each output
-        a = torch.tensor([0.28, 0.15, 0.7, 0.35])  # Scaling factors
-        b = torch.tensor([0.13, 0.014, 0.025, 0.05])  # Shifts
-        out = a * out + b # Apply scaling and shifting
+        a = torch.tensor([7/15, 0.25, 7/6, 7/12])  # Scaling factors
+        b = torch.tensor([11/300, -9/250, -5/24, -1/15])  # Shifts
+        x = a * x + b # Apply scaling and shifting with a margin
 
         return out
     
@@ -123,6 +118,6 @@ class LSTM_parallel_bounded(nn.Module):
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])  # We take the last output only
 
-        out = 0.711 * out + 0.014  # Scale the output to [0.014, 0.725]
+        out = 7/6 * out   # Scale the output to [0, 7/6]
         
         return out
