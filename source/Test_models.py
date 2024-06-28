@@ -5,7 +5,7 @@ from Train import training_single_model, training_parallel_models
 from models.Initial_fc_nn import FC_single
 from models.FC_nn_single_bounded import FC_single_bounded
 from models.FC_nn_parallel import *
-from models.LSTM import LSTM_single_bounded
+from models.LSTM import *
 from Losses import TAC_loss
 from Plots import *
 
@@ -18,13 +18,13 @@ torch.manual_seed(42)
 loss = nn.L1Loss()
 #loss = TAC_loss
 config = { 
-    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
-    'model_class': FC_single_bounded,
+    'data': np.load("data/Generated_Data/simulation_advanced.npz"),
+    'model_class': LSTM_parallel,
     'loss_function': loss,
     'batch_size': 1024,
     'lr': 0.0001,
     'patience': 50,
-    'epochs': 250,
+    'epochs': 10,
     'progress': True,
     'TAC_loss': False,
     'n_models': 5,
@@ -36,7 +36,7 @@ results_list = []
 n_models = config['n_models']
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_single_model(config)
+    model, results = training_parallel_models(config)
     # Append the results
     results_list.append(results)
 
