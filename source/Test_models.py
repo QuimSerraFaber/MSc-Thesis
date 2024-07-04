@@ -18,16 +18,16 @@ torch.manual_seed(42)
 loss = nn.L1Loss()
 #loss = TAC_loss
 config = { 
-    'data': np.load("data/Generated_Data/simulation_advanced.npz"),
-    'model_class': LSTM_parallel,
+    'data': np.load("data/Generated_Data/simulation_simple_0.01.npz"),
+    'model_class': FC_single_bounded,
     'loss_function': loss,
     'batch_size': 1024,
     'lr': 0.0001,
-    'patience': 50,
-    'epochs': 10,
+    'patience': 10,
+    'epochs': 50,
     'progress': True,
     'TAC_loss': False,
-    'n_models': 5,
+    'n_models': 3,
     'fast': True
 }
 
@@ -36,7 +36,7 @@ results_list = []
 n_models = config['n_models']
 for i in range(n_models):
     print(f"Training model {i + 1}")
-    model, results = training_parallel_models(config)
+    model, results = training_single_model(config)
     # Append the results
     results_list.append(results)
 
